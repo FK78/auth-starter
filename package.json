@@ -4,7 +4,9 @@
   "description": "Authenticated todo API with JWT, pagination, and ownership. Express + TypeScript + PostgreSQL ",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --env-file .env --watch src/index.ts",
+    "start": "node --env-file .env dist/index.js",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
