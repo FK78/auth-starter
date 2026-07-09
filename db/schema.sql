@@ -11,3 +11,11 @@ CREATE TABLE todos (
     description TEXT NOT NULL,
     user_id UUID NOT NULL REFERENCES users(id),
 );
+
+CREATE TABLE refresh_tokens (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id),
+      token TEXT NOT NULL,
+      expires_at TIMESTAMP NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+);

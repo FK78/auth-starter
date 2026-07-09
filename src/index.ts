@@ -1,5 +1,5 @@
 import express from "express"
-import userRouter from "./routes/userRouter.ts"
+import userRouter from "./routes/authRouter.ts"
 import { pool } from "./db/db.ts"
 
 const port = process.env.TUDO_PORT || 3000

@@ -44,6 +44,7 @@ export const hashPassword = (
 
 export const issueJwt = ({ id, email }: userJwtPayload, token: string) => {
   let JWT_SECRET;
+  const expiry = token === "ACCESS_TOKEN" ? "15m" : "7d"
   if (token === "ACCESS_TOKEN") {
     JWT_SECRET = process.env.ACCESS_TOKEN_SECRET;
   } else if (token === "REFRESH_TOKEN") {
@@ -52,5 +53,13 @@ export const issueJwt = ({ id, email }: userJwtPayload, token: string) => {
   if (!JWT_SECRET) {
     throw new Error("JWT_SECRET is not defined");
   }
-  return jwt.sign({ id, email }, JWT_SECRET, { expiresIn: "1h" });
+  return jwt.sign({ id, email }, JWT_SECRET, { expiresIn: expiry });
+};
+
+export const compareHash = (storedHash: string, generatedHash: string) => {
+  const stored = Buffer.from(storedHash);
+  const generated = Buffer.from(generatedHash);
+  return (
+    stored.length === generated.length && timingSafeEqual(stored, generated)
+  );
 };
