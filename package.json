@@ -1,0 +1,24 @@
+{
+  "name": "tudo",
+  "version": "1.0.0",
+  "description": "Authenticated todo API with JWT, pagination, and ownership. Express + TypeScript + PostgreSQL ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FK78/tudo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/FK78/tudo/issues"
+  },
+  "homepage": "https://github.com/FK78/tudo#readme",
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
