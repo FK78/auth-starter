@@ -1,0 +1,19 @@
+[config]
+model = "deepseek/deepseek-v4-pro"
+fallback_models = ["deepseek/deepseek-v4-flash"]
+
+[github_action_config]
+handle_push_trigger = true
+push_commands = ['/describe', '/review']
+
+[pr_code_suggestions]
+commitable_code_suggestions = true
+demand_code_suggestions_self_review = true
+
+[pr_description]
+publish_labels = true
+generate_ai_title = true
+
+[pr_reviewer]
+require_todo_scan = true
+num_max_findings = 5
