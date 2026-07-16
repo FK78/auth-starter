@@ -1,5 +1,7 @@
 import { pool } from "../db/db.ts";
 
+export type RevokedReason = "reuse_detected" | "logout" | "admin_revoked";
+
 export interface RefreshToken {
   id: string;
   jti: string;
@@ -8,9 +10,11 @@ export interface RefreshToken {
   tokenFamilyId: string;
   replacedById?: string | null;
   revokedAt: Date | null;
+  revokedReason: RevokedReason | null;
   expiresAt: Date;
   createdAt: Date;
 }
+
 
 interface RefreshTokenRow {
   id: string;
@@ -19,9 +23,9 @@ interface RefreshTokenRow {
   user_id: string;
   token_family_id: string;
   replaced_by_id: string | null;
-  issued_at: Date;
   expires_at: Date;
   revoked_at: Date | null;
+  revoked_reason: RevokedReason | null;
   created_at: Date;
 }
 
@@ -33,6 +37,7 @@ const mapRow = (row: RefreshTokenRow): RefreshToken => ({
   tokenFamilyId: row.token_family_id,
   replacedById: row.replaced_by_id,
   revokedAt: row.revoked_at,
+  revokedReason: row.revoked_reason,
   expiresAt: row.expires_at,
   createdAt: row.created_at,
 });
@@ -87,11 +92,11 @@ export const markTokenReplaced = async (
 };
 
 export const revokeTokenFamily = async (
-  tokenFamilyId: string,
+  tokenFamilyId: string, reason: string
 ): Promise<void> => {
   await pool.query(
-    `UPDATE refresh_tokens SET revoked_at = now()
+    `UPDATE refresh_tokens SET revoked_at = now(), revoked_reason = $2
     WHERE token_family_id = $1 AND revoked_at IS NULL`,
-    [tokenFamilyId],
+    [tokenFamilyId, reason],
   );
 };
