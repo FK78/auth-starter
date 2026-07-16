@@ -21,18 +21,3 @@ export const getUser = (email: string) => {
     [email],
   );
 };
-
-export const saveUserRefreshToken = (
-  token: string,
-  userId: string,
-) => {
-  return pool.query(
-    "INSERT INTO refresh_tokens(user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '7 days')",
-    [userId, token],
-  );
-};
-
-// user_id UUID NOT NULL REFERENCES users(id),
-// token TEXT NOT NULL,
-// expires_at TIMESTAMP NOT NULL,
-// created_at TIMESTAMP DEFAULT NOW()
