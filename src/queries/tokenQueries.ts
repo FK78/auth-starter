@@ -49,7 +49,7 @@ export const saveRefreshToken = async (
   input: SaveRefreshTokenInput,
 ): Promise<RefreshToken> => {
   const result = await pool.query(
-    "INSERT INTO refresh_tokens(jti, token_hash, user_id, token_family_id, replaced_by_id, expires_at) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+    "INSERT INTO refresh_tokens(jti, token_hash, user_id, token_family_id, expires_at) VALUES ($1, $2, $3, $4, $5) RETURNING *",
     [
       input.jti,
       input.tokenHash,
@@ -81,7 +81,7 @@ export const markTokenReplaced = async (
   newTokenId: string,
 ): Promise<void> => {
   await pool.query(
-    `UPDATE refresh_tokens SET repalced_by_id = $2, revoked_at = now() WHERE id = $1`,
+    `UPDATE refresh_tokens SET replaced_by_id = $2, revoked_at = now() WHERE id = $1`,
     [oldTokenId, newTokenId],
   );
 };

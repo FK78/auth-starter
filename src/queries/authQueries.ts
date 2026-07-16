@@ -58,7 +58,7 @@ export const findUserByEmail = async (
 };
 
 export const findUserById = async (id: string): Promise<UserRecord | null> => {
-  const result = await pool.query(
+  const result = await pool.query<UserRow>(
     "SELECT id, name, email, password_hash FROM users WHERE id = $1",
     [id],
   );
