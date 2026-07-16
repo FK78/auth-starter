@@ -1,5 +1,4 @@
 import { argon2, randomBytes, timingSafeEqual } from "node:crypto";
-import jwt from "jsonwebtoken";
 
 const ARGON_PARAMS = {
   memory: 65536,
@@ -8,19 +7,14 @@ const ARGON_PARAMS = {
   tagLength: 64,
 };
 
-type userJwtPayload = {
-  id: string;
-  email: string;
-};
-
-export const hashPassword = (
-  password: string,
+export const hashString = (
+  str: string,
   existingSalt?: Buffer,
 ): Promise<string> => {
   const salt = existingSalt ?? randomBytes(16);
 
   const parameters = {
-    message: password,
+    message: str,
     nonce: salt,
     ...ARGON_PARAMS,
   };
@@ -40,20 +34,6 @@ export const hashPassword = (
       );
     });
   });
-};
-
-export const issueJwt = ({ id, email }: userJwtPayload, token: string) => {
-  let JWT_SECRET;
-  const expiry = token === "ACCESS_TOKEN" ? "15m" : "7d"
-  if (token === "ACCESS_TOKEN") {
-    JWT_SECRET = process.env.ACCESS_TOKEN_SECRET;
-  } else if (token === "REFRESH_TOKEN") {
-    JWT_SECRET = process.env.REFRESH_TOKEN_SECRET;
-  }
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined");
-  }
-  return jwt.sign({ id, email }, JWT_SECRET, { expiresIn: expiry });
 };
 
 export const compareHash = (storedHash: string, generatedHash: string) => {
