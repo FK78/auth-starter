@@ -85,3 +85,13 @@ export const markTokenReplaced = async (
     [oldTokenId, newTokenId],
   );
 };
+
+export const revokeTokenFamily = async (
+  tokenFamilyId: string,
+): Promise<void> => {
+  await pool.query(
+    `UPDATE refresh_tokens SET revoked_at = now()
+    WHERE token_family_id = $1 AND revoked_at IS NULL`,
+    [tokenFamilyId],
+  );
+};
