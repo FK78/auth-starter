@@ -34,15 +34,15 @@ const mapRow = (row: RefreshTokenRow): RefreshToken => ({
   replacedById: row.replaced_by_id,
   revokedAt: row.revoked_at,
   expiresAt: row.expires_at,
-  createdAt: row.created_at
+  createdAt: row.created_at,
 });
 
 interface SaveRefreshTokenInput {
-    jti: string;
-    tokenHash: string;
-    userId: string;
-    tokenFamilyId: string;
-    expiresAt: Date;
+  jti: string;
+  tokenHash: string;
+  userId: string;
+  tokenFamilyId: string;
+  expiresAt: Date;
 }
 
 export const saveRefreshToken = async (
@@ -63,4 +63,15 @@ export const saveRefreshToken = async (
     throw new Error("Failed to insert refresh token");
   }
   return mapRow(row);
+};
+
+export const findRefreshTokenByJti = async (
+  jti: string,
+): Promise<RefreshToken | null> => {
+  const result = await pool.query<RefreshTokenRow>(
+    `SELECT * FROM refresh_tokens WHERE jti = $1`,
+    [jti],
+  );
+  const row = result.rows[0];
+  return row ? mapRow(row) : null;
 };
