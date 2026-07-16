@@ -1,6 +1,6 @@
 import { pool } from "../db/db.ts";
 
-interface RefreshToken {
+export interface RefreshToken {
   id: string;
   jti: string;
   tokenHash: string;
@@ -42,7 +42,7 @@ interface SaveRefreshTokenInput {
     tokenHash: string;
     userId: string;
     tokenFamilyId: string;
-    expiresAt: string;
+    expiresAt: Date;
 }
 
 export const saveRefreshToken = async (

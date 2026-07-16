@@ -1,12 +1,8 @@
 import { randomBytes } from "crypto";
 import { AppError } from "../errors/AppError.ts";
-import {
-  createUser,
-  findByEmail,
-  getUser,
-  saveUserRefreshToken,
-} from "../queries/authQueries.ts";
-import { compareHash, hashPassword, issueJwt } from "../utils/auth.ts";
+import { createUser, findByEmail, getUser } from "../queries/authQueries.ts";
+import { compareHash, hashString } from "../utils/auth.ts";
+import { issueTokenPair } from "./tokenService.ts";
 
 export type User = {
   name: string;
@@ -17,17 +13,21 @@ export type User = {
 export const registerUser = async ({ name, email, password }: User) => {
   const normalizedEmail = email.trim().toLowerCase();
   const existing = await findByEmail(normalizedEmail);
-  if (existing.rows.length > 0) {
-    throw new AppError("User already exists", 400);
-  }
-  const hashedPassword: string = await hashPassword(password);
-  const result = await createUser(name, normalizedEmail, hashedPassword);
 
-  if (result.rowCount === 1) {
+  if (existing.rows.length > 0) {
+    throw new AppError("User already exists", 409);
+  }
+  const hashedPassword: string = await hashString(password);
+
+  try {
+    const result = await createUser(name, normalizedEmail, hashedPassword);
     const user = result.rows[0];
     return await issueTokenPair(user);
-  } else {
-    throw new AppError("Failed to create user", 500);
+  } catch (err: any) {
+    if (err.code === "23505") {
+      throw new AppError("User already exists", 409);
+    }
+    throw err;
   }
 };
 
@@ -46,21 +46,10 @@ export const loginUser = async ({
     ? Buffer.from(user.password_hash.split("$")[4], "base64")
     : randomBytes(16);
 
-  const newHash: string = await hashPassword(password, hashedWithExtractedSalt);
+  const newHash: string = await hashString(password, hashedWithExtractedSalt);
 
   if (!user || !compareHash(user.password_hash, newHash)) {
-    throw new AppError("Invalid credentials", 400);
+    throw new AppError("Invalid credentials", 401);
   }
   return await issueTokenPair(user);
-};
-
-const issueTokenPair = async (user: { id: string; email: string }) => {
-  const accessToken = issueJwt(user, "ACCESS_TOKEN");
-  const refreshToken = issueJwt(user, "REFRESH_TOKEN");
-  const saveResult = await saveUserRefreshToken(refreshToken, user.id);
-  if (saveResult.rowCount === 1) {
-    return { accessToken, refreshToken };
-  } else {
-    throw new AppError("Failed to save token", 500);
-  }
 };

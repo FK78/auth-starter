@@ -1,0 +1,54 @@
+import jwt from "jsonwebtoken";
+import { createHash, randomUUIDv7 } from "crypto";
+import {
+  saveRefreshToken,
+  type RefreshToken,
+} from "../queries/tokenQueries.ts";
+
+const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+interface AuthUser {
+  id: string;
+}
+
+const signAccessToken = (user: AuthUser): string =>
+  jwt.sign({ sub: user.id }, process.env.ACCESS_TOKEN_SECRET!, {
+    expiresIn: "15m",
+  });
+
+const signRefreshToken = (user: AuthUser, jti: string) => {
+  const refreshToken = jwt.sign(
+    { sub: user.id, jti },
+    process.env.REFRESH_TOKEN_SECRET!,
+    { expiresIn: "7d" },
+  );
+  const tokenHash = createHash("sha256").update(refreshToken).digest("hex");
+  return { refreshToken, tokenHash };
+};
+
+const createAndPersistTokenPair = async (
+  user: AuthUser,
+  tokenFamilyId: string,
+) => {
+  const jti = randomUUIDv7();
+  const accessToken = signAccessToken(user);
+  const { refreshToken, tokenHash } = signRefreshToken(user, jti);
+
+  const newRow = await saveRefreshToken({
+    jti,
+    tokenHash,
+    userId: user.id,
+    tokenFamilyId,
+    expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+  });
+
+  return { accessToken, refreshToken, newRow };
+};
+
+export const issueTokenPair = async (user: AuthUser) => {
+  const { accessToken, refreshToken } = await createAndPersistTokenPair(
+    user,
+    randomUUIDv7(),
+  );
+  return { accessToken, refreshToken };
+};
