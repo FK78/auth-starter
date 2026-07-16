@@ -14,8 +14,12 @@ CREATE TABLE todos (
 
 CREATE TABLE refresh_tokens (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      jti UUID NOT NULL UNIQUE,
+      token_hash TEXT NOT NULL UNIQUE,
       user_id UUID NOT NULL REFERENCES users(id),
-      token TEXT NOT NULL,
-      expires_at TIMESTAMP NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
+      token_family_id UUID NOT NULL,
+      replaced_by_id UUID REFERENCES refresh_tokens(id),
+      revoked_at TIMESTAMPZ,
+      expires_at TIMESTAMPZ NOT NULL,
+      created_at TIMESTAMPZ DEFAULT NOW()
 );
