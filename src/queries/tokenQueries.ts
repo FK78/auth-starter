@@ -75,3 +75,13 @@ export const findRefreshTokenByJti = async (
   const row = result.rows[0];
   return row ? mapRow(row) : null;
 };
+
+export const markTokenReplaced = async (
+  oldTokenId: string,
+  newTokenId: string,
+): Promise<void> => {
+  await pool.query(
+    `UPDATE refresh_tokens SET repalced_by_id = $2, revoked_at = now() WHERE id = $1`,
+    [oldTokenId, newTokenId],
+  );
+};
