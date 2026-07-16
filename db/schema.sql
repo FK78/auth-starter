@@ -19,9 +19,9 @@ CREATE TABLE refresh_tokens (
       user_id UUID NOT NULL REFERENCES users(id),
       token_family_id UUID NOT NULL,
       replaced_by_id UUID REFERENCES refresh_tokens(id),
-      revoked_at TIMESTAMPZ,
-      expires_at TIMESTAMPZ NOT NULL,
-      created_at TIMESTAMPZ DEFAULT NOW()
+      revoked_at TIMESTAMPTZ,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
