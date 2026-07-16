@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
-import { createHash, randomUUIDv7 } from "crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
+  markTokenReplaced,
   saveRefreshToken,
   type RefreshToken,
 } from "../queries/tokenQueries.ts";
@@ -30,7 +31,7 @@ const createAndPersistTokenPair = async (
   user: AuthUser,
   tokenFamilyId: string,
 ) => {
-  const jti = randomUUIDv7();
+  const jti = randomUUID();
   const accessToken = signAccessToken(user);
   const { refreshToken, tokenHash } = signRefreshToken(user, jti);
 
@@ -48,7 +49,19 @@ const createAndPersistTokenPair = async (
 export const issueTokenPair = async (user: AuthUser) => {
   const { accessToken, refreshToken } = await createAndPersistTokenPair(
     user,
-    randomUUIDv7(),
+    randomUUID(),
   );
+  return { accessToken, refreshToken };
+};
+
+export const rotateTokenPair = async (
+  user: AuthUser,
+  oldToken: RefreshToken,
+) => {
+  const { accessToken, refreshToken, newRow } = await createAndPersistTokenPair(
+    user,
+    oldToken.tokenFamilyId,
+  );
+  await markTokenReplaced(oldToken.id, newRow.id);
   return { accessToken, refreshToken };
 };
