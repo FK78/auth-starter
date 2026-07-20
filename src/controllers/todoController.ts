@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { insertTodo, editTodo } from "../services/todoService.ts";
+import { insertTodo, editTodo, removeTodo } from "../services/todoService.ts";
 
 export const createTodo = async (req: Request, res: Response) => {
   const result = await insertTodo(req.body, req.user!.id);
@@ -10,4 +10,10 @@ export const updateTodo = async (req: Request, res: Response) => {
   const noteId = req.params.id as string;
   const result = await editTodo(req.body, req.user!.id, noteId);
   res.status(200).json(result);
+};
+
+export const deleteTodo = async (req: Request, res: Response) => {
+  const noteId = req.params.id as string;
+  const result = await removeTodo(req.user!.id, noteId);
+  res.status(204).json(result);
 };

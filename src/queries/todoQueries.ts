@@ -51,3 +51,15 @@ export const getUserIdForTodoById = async (todoId: string) => {
   const result = await pool.query("SELECT user_id FROM todos WHERE id = $1", [todoId])
   return result.rows[0]?.user_id;
 }
+
+export const deleteTodo = async (
+  userId: string,
+  todoId: string
+) => {
+  const result = await pool.query(
+    "DELETE FROM todos WHERE user_id = $1 AND id = $2",
+    [userId, todoId],
+  );
+  const row = result.rows[0];
+  return row;
+};
