@@ -9,7 +9,8 @@ CREATE TABLE todos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     description TEXT NOT NULL,
-    user_id UUID NOT NULL REFERENCES users(id)
+    user_id UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE refresh_tokens (

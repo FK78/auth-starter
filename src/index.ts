@@ -1,5 +1,6 @@
 import express from "express"
-import userRouter from "./routes/authRouter.ts"
+import authRouter from "./routes/authRouter.ts"
+import todoRouter from "./routes/todoRouter.ts"
 import { pool } from "./db/db.ts"
 import { errorHandler, routeNotFound } from "./middleware/errorHandler.ts"
 
@@ -20,7 +21,8 @@ try {
   process.exit(1);
 }
 
-app.use("/", userRouter)
+app.use("/", authRouter)
+app.use("/", todoRouter)
 
 app.use(routeNotFound)
 app.use(errorHandler)
