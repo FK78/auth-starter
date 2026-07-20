@@ -7,6 +7,10 @@ const app = express()
 
 app.use(express.json())
 
+if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
+  throw new Error("Token secrets must be set")
+}
+
 try {
   await pool.query("SELECT 1");
   console.log("DB Connected");
@@ -18,5 +22,5 @@ try {
 app.use("/", userRouter)
 
 app.listen(port, () => {
-    console.log(`Server is online at port ${port}`)
+  console.log(`Server is online at port ${port}`)
 })

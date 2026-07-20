@@ -5,12 +5,9 @@ import {
   saveRefreshToken,
   type RefreshToken,
 } from "../queries/tokenQueries.ts";
+import type { AuthUser } from "../types/auth.ts";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
-interface AuthUser {
-  id: string;
-}
 
 const signAccessToken = (user: AuthUser): string =>
   jwt.sign({ sub: user.id }, process.env.ACCESS_TOKEN_SECRET!, {
