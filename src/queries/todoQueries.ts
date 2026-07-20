@@ -68,7 +68,7 @@ export const fetchTodos = async (
   limit: number
 ) => {
   const result = await pool.query(
-    "SELECT * FROM todos WHERE user_id = $1 LIMIT $3 OFFSET ($2 - 1) * $3 ",
+    "SELECT * FROM todos WHERE user_id = $1 ORDER BY created_at DESC LIMIT $3 OFFSET ($2 - 1) * $3 ",
     [userId, page, limit],
   );
   return result.rows
