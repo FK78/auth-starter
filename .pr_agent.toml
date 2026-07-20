@@ -9,6 +9,10 @@ push_commands = ['/describe', '/review']
 [pr_code_suggestions]
 commitable_code_suggestions = true
 demand_code_suggestions_self_review = true
+extra_instructions = """
+- Do not suggest wrapping async Express 5 handlers in try/catch. Express 5 catches rejected promises natively.
+- Do not suggest handling null from PostgreSQL INSERT/UPDATE RETURNING queries. These cannot return null on success.
+"""
 
 [pr_description]
 publish_labels = true
@@ -17,3 +21,9 @@ generate_ai_title = true
 [pr_reviewer]
 require_todo_scan = true
 num_max_findings = 5
+extra_instructions = """
+- This project uses Express 5 (^5.2.1). Async handlers are natively supported. Do NOT suggest try/catch with next(err) patterns.
+- PostgreSQL is the database. A successful INSERT/UPDATE with RETURNING always returns a row. Do not flag null checks on RETURNING results as issues.
+- Do not flag theoretical race conditions that require concurrent requests in microsecond windows unless they involve financial data or security.
+- Focus on actual logic bugs, security issues, and missing validation rather than defensive coding for impossible scenarios.
+"""
