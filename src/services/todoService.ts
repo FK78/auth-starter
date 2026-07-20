@@ -43,6 +43,5 @@ export const removeTodo = async (userId: string, noteId: string) => {
   if (checkUserAccessForTodo !== userId) {
     throw new AppError("Forbidden", 403);
   }
-  const result = await deleteTodo(userId, noteId);
-  return result;
+  await deleteTodo(userId, noteId);
 };

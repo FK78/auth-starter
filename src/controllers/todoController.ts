@@ -14,6 +14,6 @@ export const updateTodo = async (req: Request, res: Response) => {
 
 export const deleteTodo = async (req: Request, res: Response) => {
   const noteId = req.params.id as string;
-  const result = await removeTodo(req.user!.id, noteId);
+  await removeTodo(req.user!.id, noteId);
   res.status(204).end();
 };
