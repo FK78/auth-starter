@@ -10,15 +10,15 @@ import type { AuthUser } from "../types/auth.ts";
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const signAccessToken = (user: AuthUser): string =>
-  jwt.sign({ sub: user.id }, process.env.ACCESS_TOKEN_SECRET!, {
-    expiresIn: "15m",
+  jwt.sign({ sub: user.id, type: "access" }, process.env.ACCESS_TOKEN_SECRET!, {
+    expiresIn: "15m", issuer: "tudo", audience: "tudo-api"
   });
 
 const signRefreshToken = (user: AuthUser, jti: string) => {
   const refreshToken = jwt.sign(
-    { sub: user.id, jti },
+    { sub: user.id, jti, type: "refresh" },
     process.env.REFRESH_TOKEN_SECRET!,
-    { expiresIn: "7d" },
+    { expiresIn: "7d", issuer: "tudo", audience: "tudo-api" },
   );
   const tokenHash = createHash("sha256").update(refreshToken).digest("hex");
   return { refreshToken, tokenHash };

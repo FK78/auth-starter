@@ -14,16 +14,20 @@ export const authAndAuth = async (
   }
   const accessToken = authHeader.split(" ")[1]!;
 
-  let payload: { sub: string; };
+  let payload: { sub: string; type: string };
 
   try {
     payload = jwt.verify(
       accessToken,
       process.env.ACCESS_TOKEN_SECRET!,
-      { algorithms: ["HS256"] }
+      { algorithms: ["HS256"], issuer: "tudo", audience: "tudo-api" }
     ) as unknown as typeof payload;
   } catch {
     throw new AppError("Invalid access token", 401);
+  }
+
+  if (payload.type !== "access") {
+    throw new AppError("Invalid access token", 401)
   }
 
   const user = await findUserById(payload.sub);
