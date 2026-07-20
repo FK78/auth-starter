@@ -14,7 +14,7 @@ interface TodoRow {
   created_at: Date;
 }
 
-const mapRow = (row: TodoRow): TodoResponse => ({
+const mapTodoRow = (row: TodoRow): TodoResponse => ({
   id: row.id,
   title: row.title,
   description: row.description,
@@ -30,13 +30,10 @@ export const saveTodo = async (
     [title, description, userId],
   );
   const row = result.rows[0];
-  if (!row) {
-    throw new Error("Failed to insert todo");
-  }
-  return mapRow(row)
+  return row ? mapTodoRow(row) : null;
 };
 
-export const update = async (
+export const updateTodo = async (
   title: string,
   description: string,
   userId: string,
@@ -47,10 +44,7 @@ export const update = async (
     [title, description, userId, todoId],
   );
   const row = result.rows[0];
-  if (!row) {
-    throw new Error("Failed to update todo");
-  }
-  return mapRow(row)
+  return row ? mapTodoRow(row) : null;
 };
 
 export const getUserIdForTodoById = async (todoId: string) => {
