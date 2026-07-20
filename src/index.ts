@@ -1,6 +1,7 @@
 import express from "express"
 import userRouter from "./routes/authRouter.ts"
 import { pool } from "./db/db.ts"
+import { errorHandler, routeNotFound } from "./middleware/errorHandler.ts"
 
 const port = process.env.TUDO_PORT || 3000
 const app = express()
@@ -20,6 +21,9 @@ try {
 }
 
 app.use("/", userRouter)
+
+app.use(routeNotFound)
+app.use(errorHandler)
 
 app.listen(port, () => {
   console.log(`Server is online at port ${port}`)
