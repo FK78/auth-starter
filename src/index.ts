@@ -1,5 +1,6 @@
 import express from "express"
-import userRouter from "./routes/authRouter.ts"
+import authRouter from "./routes/authRouter.ts"
+import todoRouter from "./routes/todoRouter.ts"
 import { pool } from "./db/db.ts"
 
 const port = process.env.TUDO_PORT || 3000
@@ -15,7 +16,8 @@ try {
   process.exit(1);
 }
 
-app.use("/", userRouter)
+app.use("/", authRouter)
+app.use("/", todoRouter)
 
 app.listen(port, () => {
     console.log(`Server is online at port ${port}`)
