@@ -68,6 +68,7 @@ export const refreshTokens = async (incomingRefreshToken: string) => {
     payload = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET!,
+      { algorithms: ["HS256"], issuer: "tudo", audience: "tudo-api" }
     ) as typeof payload;
   } catch {
     throw new AppError("Invalid refresh token", 401);
