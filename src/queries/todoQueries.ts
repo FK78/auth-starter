@@ -61,3 +61,25 @@ export const deleteTodo = async (
     [userId, todoId],
   );
 };
+
+export const fetchTodos = async (
+  userId: string,
+  page: number,
+  limit: number
+) => {
+  const result = await pool.query(
+    "SELECT * FROM todos WHERE user_id = $1 LIMIT $3 OFFSET ($2 - 1) * $3 ",
+    [userId, page, limit],
+  );
+  return result.rows
+};
+
+export const countTodos = async (
+  userId: string,
+) => {
+  const result = await pool.query(
+    "SELECT COUNT(*) FROM todos WHERE user_id = $1",
+    [userId],
+  );
+  return result.rows[0].count
+};
