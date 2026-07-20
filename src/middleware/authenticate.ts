@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { AppError } from "../errors/AppError.ts";
 import { findUserById } from "../queries/authQueries.ts";
 
-export const authAndAuth = async (
+export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction,

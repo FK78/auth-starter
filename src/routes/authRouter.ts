@@ -1,7 +1,6 @@
 import express  from "express"
 import { register, login, refresh } from "../controllers/authController.ts"
 import { validate } from "../middleware/validate.ts"
-import { authAndAuth } from "../middleware/authenticate.ts"
 
 const router = express.Router()
 
