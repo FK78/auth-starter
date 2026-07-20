@@ -1,11 +1,9 @@
 import { pool } from "../db/db.ts";
 
-export interface Todo {
+export interface TodoResponse {
   id: string;
   title: string;
   description: string;
-  userId: string;
-  createdAt: Date;
 }
 
 interface TodoRow {
@@ -16,12 +14,10 @@ interface TodoRow {
   created_at: Date;
 }
 
-const mapRow = (row: TodoRow): Todo => ({
+const mapRow = (row: TodoRow): TodoResponse => ({
   id: row.id,
   title: row.title,
   description: row.description,
-  userId: row.user_id,
-  createdAt: row.created_at,
 });
 
 export const saveTodo = async (
