@@ -11,6 +11,7 @@ const limit = 60 * 60 * 1000;
 const maxTries = 30;
 
 app.use(rateLimiter(limit, maxTries))
+app.set('trust proxy', 1);
 app.use(express.json())
 
 if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
