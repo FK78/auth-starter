@@ -69,6 +69,7 @@ export const rotateTokenPair = async (
       client
     );
     await linkReplacedToken(oldToken.id, newRow.id, client);
+    await client.query("COMMIT");
     return { accessToken, refreshToken };
   } catch (err) {
     await client.query("ROLLBACK");
