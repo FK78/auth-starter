@@ -20,7 +20,7 @@ export const deleteTodo = async (req: Request, res: Response) => {
 
 export const retrieveTodos = async (req: Request, res: Response) => {
   const page = Math.max(parseInt(req.query.page as string) || 1, 1);
-  const limit = Math.max(parseInt(req.query.limit as string) || 10, 10);
+  const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 10, 10), 100);
   const { data, total } = await getTodos(req.user!.id, page, limit)
   res.status(200).json({ data: data, page: page, limit: limit, total: total })
 }
