@@ -1,3 +1,4 @@
+import type { PoolClient } from "pg";
 import { pool } from "../db/db.ts";
 
 export type RevokedReason = "reuse_detected" | "logout" | "admin_revoked";
@@ -52,8 +53,10 @@ interface SaveRefreshTokenInput {
 
 export const saveRefreshToken = async (
   input: SaveRefreshTokenInput,
+  client?: PoolClient
 ): Promise<RefreshToken> => {
-  const result = await pool.query(
+  const db = client || pool
+  const result = await db.query(
     "INSERT INTO refresh_tokens(jti, token_hash, user_id, token_family_id, expires_at) VALUES ($1, $2, $3, $4, $5) RETURNING *",
     [
       input.jti,
@@ -72,9 +75,11 @@ export const saveRefreshToken = async (
 
 export const findRefreshTokenByJti = async (
   jti: string,
+  client?: PoolClient
 ): Promise<RefreshToken | null> => {
-  const result = await pool.query<RefreshTokenRow>(
-    `SELECT * FROM refresh_tokens WHERE jti = $1`,
+  const db = client || pool
+  const result = await db.query<RefreshTokenRow>(
+    `SELECT * FROM refresh_tokens WHERE jti = $1 FOR UPDATE`,
     [jti],
   );
   const row = result.rows[0];
@@ -83,10 +88,23 @@ export const findRefreshTokenByJti = async (
 
 export const markTokenReplaced = async (
   oldTokenId: string,
-  newTokenId: string,
+  client?: PoolClient
 ): Promise<void> => {
-  await pool.query(
-    `UPDATE refresh_tokens SET replaced_by_id = $2, revoked_at = now() WHERE id = $1`,
+  const db = client || pool
+  await db.query(
+    `UPDATE refresh_tokens SET revoked_at = now() WHERE id = $1`,
+    [oldTokenId],
+  );
+};
+
+export const linkReplacedToken = async (
+  oldTokenId: string,
+  newTokenId: string,
+  client?: PoolClient
+): Promise<void> => {
+  const db = client || pool
+  await db.query(
+    `UPDATE refresh_tokens SET replaced_by_id = $2 WHERE id = $1`,
     [oldTokenId, newTokenId],
   );
 };

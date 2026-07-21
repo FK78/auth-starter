@@ -1,11 +1,13 @@
 import jwt from "jsonwebtoken";
 import { createHash, randomUUID } from "node:crypto";
 import {
+  linkReplacedToken,
   markTokenReplaced,
   saveRefreshToken,
   type RefreshToken,
 } from "../queries/tokenQueries.ts";
 import type { AuthUser } from "../types/auth.ts";
+import type { PoolClient } from "pg";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -27,6 +29,7 @@ const signRefreshToken = (user: AuthUser, jti: string) => {
 const createAndPersistTokenPair = async (
   user: AuthUser,
   tokenFamilyId: string,
+  client?: PoolClient
 ) => {
   const jti = randomUUID();
   const accessToken = signAccessToken(user);
@@ -38,7 +41,7 @@ const createAndPersistTokenPair = async (
     userId: user.id,
     tokenFamilyId,
     expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
-  });
+  }, client);
 
   return { accessToken, refreshToken, newRow };
 };
@@ -54,11 +57,14 @@ export const issueTokenPair = async (user: AuthUser) => {
 export const rotateTokenPair = async (
   user: AuthUser,
   oldToken: RefreshToken,
+  client: PoolClient
 ) => {
+  await markTokenReplaced(oldToken.id, client);
   const { accessToken, refreshToken, newRow } = await createAndPersistTokenPair(
     user,
     oldToken.tokenFamilyId,
+    client
   );
-  await markTokenReplaced(oldToken.id, newRow.id);
+  await linkReplacedToken(oldToken.id, newRow.id, client);
   return { accessToken, refreshToken };
 };

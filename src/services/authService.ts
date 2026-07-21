@@ -13,6 +13,7 @@ import {
   findRefreshTokenByJti,
   revokeTokenFamily,
 } from "../queries/tokenQueries.ts";
+import { withTransaction } from "../db/db.ts";
 
 export type User = {
   name: string;
@@ -63,37 +64,39 @@ export const loginUser = async ({
 };
 
 export const refreshTokens = async (incomingRefreshToken: string) => {
-  let payload: { sub: string; jti: string };
-  try {
-    payload = jwt.verify(
-      incomingRefreshToken,
-      process.env.REFRESH_TOKEN_SECRET!,
-      { algorithms: ["HS256"], issuer: "tudo", audience: "tudo-api" }
-    ) as typeof payload;
-  } catch {
-    throw new AppError("Invalid refresh token", 401);
-  }
+  return await withTransaction(async (client) => {
+    let payload: { sub: string; jti: string };
+    try {
+      payload = jwt.verify(
+        incomingRefreshToken,
+        process.env.REFRESH_TOKEN_SECRET!,
+        { algorithms: ["HS256"], issuer: "tudo", audience: "tudo-api" }
+      ) as typeof payload;
+    } catch {
+      throw new AppError("Invalid refresh token", 401);
+    }
 
-  const tokenRow = await findRefreshTokenByJti(payload.jti);
-  if (!tokenRow) {
-    throw new AppError("Invalid refresh token", 401);
-  }
+    const tokenRow = await findRefreshTokenByJti(payload.jti, client);
+    if (!tokenRow) {
+      throw new AppError("Invalid refresh token", 401);
+    }
 
-  if (tokenRow.revokedAt || tokenRow.replacedById) {
-    await revokeTokenFamily(tokenRow.tokenFamilyId, "reuse_detected");
-    throw new AppError("Refresh token reuse detected", 401);
-  }
+    if (tokenRow.revokedAt || tokenRow.replacedById) {
+      await revokeTokenFamily(tokenRow.tokenFamilyId, "reuse_detected");
+      throw new AppError("Refresh token reuse detected", 401);
+    }
 
-  if (tokenRow.expiresAt < new Date()) {
-    throw new AppError("Refresh token expired", 401);
-  }
+    if (tokenRow.expiresAt < new Date()) {
+      throw new AppError("Refresh token expired", 401);
+    }
 
-  const user = await findUserById(tokenRow.userId);
-  if (!user) {
-    throw new AppError("User not found", 401);
-  }
+    const user = await findUserById(tokenRow.userId, client);
+    if (!user) {
+      throw new AppError("User not found", 401);
+    }
 
-  return await rotateTokenPair(user, tokenRow);
+    return await rotateTokenPair(user, tokenRow, client);
+  })
 };
 
 export const verifyToken = async (incomingAccessToken: string) => {

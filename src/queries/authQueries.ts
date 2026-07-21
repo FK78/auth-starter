@@ -1,3 +1,4 @@
+import type { PoolClient } from "pg";
 import { pool } from "../db/db.ts";
 
 export interface UserRecord {
@@ -57,8 +58,9 @@ export const findUserByEmail = async (
   return row ? mapUserRow(row) : null;
 };
 
-export const findUserById = async (id: string): Promise<UserRecord | null> => {
-  const result = await pool.query<UserRow>(
+export const findUserById = async (id: string, client?: PoolClient): Promise<UserRecord | null> => {
+  const db = client || pool
+  const result = await db.query<UserRow>(
     "SELECT id, name, email, password_hash FROM users WHERE id = $1",
     [id],
   );
