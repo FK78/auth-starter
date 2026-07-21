@@ -13,8 +13,8 @@ export type Todo = {
 };
 
 export type TodoFilters = {
-  sort: string;
-  order: string;
+  sort: "created_at" | "title";
+  order: "asc" | "desc";
   title: string | undefined;
   description: string | undefined;
 };

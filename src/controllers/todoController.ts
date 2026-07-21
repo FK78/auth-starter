@@ -25,14 +25,14 @@ export const deleteTodo = async (req: Request, res: Response) => {
 
 export const retrieveTodos = async (req: Request, res: Response) => {
   const allowedSorts = ["created_at", "title"];
-  const sort = allowedSorts.includes(req.query.sort as string)
+  const sort = (allowedSorts.includes(req.query.sort as string)
     ? req.query.sort
-    : "created_at";
+    : "created_at") as "created_at" | "title";
 
   const allowedOrder = ["asc", "desc"];
-  const order = allowedOrder.includes(req.query.order as string)
+  const order = (allowedOrder.includes(req.query.order as string)
     ? req.query.order
-    : "asc";
+    : "asc") as "asc" | "desc";
 
   const page = Math.max(parseInt(req.query.page as string) || 1, 1);
   const limit = Math.min(
