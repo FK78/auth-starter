@@ -77,7 +77,7 @@ export const findRefreshTokenByJti = async (
   jti: string,
 ): Promise<RefreshToken | null> => {
   const result = await pool.query<RefreshTokenRow>(
-    `SELECT * FROM refresh_tokens WHERE jti = $1`,
+    `SELECT * FROM refresh_tokens WHERE jti = $1 FOR UPDATE`,
     [jti],
   );
   const row = result.rows[0];
