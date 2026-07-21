@@ -12,6 +12,13 @@ export type Todo = {
   description: string;
 };
 
+export type TodoFilters = {
+  sort: string;
+  order: string;
+  title: string | undefined;
+  description: string | undefined;
+};
+
 export const insertTodo = async (
   { title, description }: Todo,
   userId: string,
@@ -47,6 +54,16 @@ export const removeTodo = async (userId: string, noteId: string) => {
   await deleteTodo(userId, noteId);
 };
 
-export const getTodos = async (userId: string, page: number, limit: number) => {
-  return await fetchTodos(userId, page, limit);
+export const getTodos = async (
+  userId: string,
+  page: number,
+  limit: number,
+  { sort, order, title, description }: TodoFilters,
+) => {
+  return await fetchTodos(userId, page, limit, {
+    sort,
+    order,
+    title,
+    description,
+  });
 };

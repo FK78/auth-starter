@@ -1,5 +1,10 @@
 import type { Request, Response } from "express";
-import { insertTodo, editTodo, removeTodo, getTodos } from "../services/todoService.ts";
+import {
+  insertTodo,
+  editTodo,
+  removeTodo,
+  getTodos,
+} from "../services/todoService.ts";
 
 export const createTodo = async (req: Request, res: Response) => {
   const result = await insertTodo(req.body, req.user!.id);
@@ -19,8 +24,27 @@ export const deleteTodo = async (req: Request, res: Response) => {
 };
 
 export const retrieveTodos = async (req: Request, res: Response) => {
+  const allowedSorts = ["created_at", "title"];
+  const sort = allowedSorts.includes(req.query.sort as string)
+    ? req.query.sort
+    : "created_at";
+
+  const allowedOrder = ["asc", "desc"];
+  const order = allowedOrder.includes(req.query.order as string)
+    ? req.query.order
+    : "asc";
+
   const page = Math.max(parseInt(req.query.page as string) || 1, 1);
-  const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 10, 10), 100);
-  const { data, total } = await getTodos(req.user!.id, page, limit)
-  res.status(200).json({ data: data, page: page, limit: limit, total: total })
-}
+  const limit = Math.min(
+    Math.max(parseInt(req.query.limit as string) || 1, 1),
+    100,
+  );
+  const { data, total } = await getTodos(req.user!.id, page, limit, {
+    sort: sort as string,
+    order: order as string,
+    title: req.query.title as string | undefined,
+    description: req.query.description as string | undefined,
+  });
+
+  res.status(200).json({ data: data, page: page, limit: limit, total: total });
+};
