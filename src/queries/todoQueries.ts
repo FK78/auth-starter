@@ -61,3 +61,18 @@ export const deleteTodo = async (
     [userId, todoId],
   );
 };
+
+export const fetchTodos = async (
+  userId: string,
+  page: number,
+  limit: number
+) => {
+  const offset = (page - 1) * limit;
+  const result = await pool.query(
+    "SELECT id, title, description, COUNT(*) OVER() AS total FROM todos WHERE user_id = $1 ORDER BY created_at DESC LIMIT $3 OFFSET $2",
+    [userId, offset, limit],
+  );
+  const total = result.rows[0]?.total ?? 0;
+  const data = result.rows.map(({ total, ...row }) => row);
+  return { data, total: parseInt(total) }
+};
