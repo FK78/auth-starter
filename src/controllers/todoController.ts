@@ -40,8 +40,8 @@ export const retrieveTodos = async (req: Request, res: Response) => {
     100,
   );
   const { data, total } = await getTodos(req.user!.id, page, limit, {
-    sort: sort as string,
-    order: order as string,
+    sort,
+    order,
     title: req.query.title as string | undefined,
     description: req.query.description as string | undefined,
   });
