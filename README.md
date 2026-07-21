@@ -9,22 +9,22 @@
 </p>
 
 <p align="center">
-  RESTful API with JWT authentication, pagination, and the audacity to tell you you're unauthorized.
+  RESTful API with JWT access/refresh token rotation, pagination, sorting, filtering, and the audacity to tell you you're unauthorized.
 </p>
 
 ---
 
 ## Why?
 
-Because todo apps are the "Hello World" of backend development. But this one has login, tokens, and will actually judge you for not finishing your tasks.
+Because todo apps are the "Hello World" of backend development. But this one has login, token rotation, and will actually judge you for not finishing your tasks.
 
 ## Tech Stack
 
-- **Node.js** + **Express 5** + **TypeScript** — type-safe productivity guilt
-- **PostgreSQL** — running in Docker, storing your procrastination
-- **pg** — raw SQL, still no ORM
-- **JWT** — so strangers can't see your embarrassing task list
-- **bcrypt** — because "password123" shouldn't be stored in plain text
+- **Node.js** + **Express 5** + **TypeScript** - type-safe productivity guilt
+- **PostgreSQL** - running in Docker, storing your procrastination
+- **pg** - raw SQL, no ORM
+- **jsonwebtoken** - access + refresh token rotation with family-based reuse detection
+- **Argon2id** (via `node:crypto`) - because "password123" shouldn't be stored in plain text
 
 ## Endpoints
 
@@ -34,39 +34,58 @@ Because todo apps are the "Hello World" of backend development. But this one has
 |--------|-------|-------------|
 | `POST` | `/register` | Join the productivity cult |
 | `POST` | `/login` | Prove you're you |
+| `POST` | `/refresh` | Rotate your tokens like a responsible adult |
 
 ### Todos (authenticated)
 
 | Method | Route | What it does |
 |--------|-------|-------------|
 | `POST` | `/todos` | Add another thing you won't do |
-| `GET` | `/todos?page=1&limit=10` | Confront your backlog, paginated |
+| `GET` | `/todos` | Confront your backlog, paginated |
 | `PUT` | `/todos/:id` | Pretend you're making progress |
 | `DELETE` | `/todos/:id` | Acceptance is a stage of grief |
+
+#### GET /todos query parameters
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `page` | `1` | Page number |
+| `limit` | `1` (max `100`) | Items per page |
+| `sort` | `created_at` | Sort by `created_at` or `title` |
+| `order` | `asc` | Sort direction: `asc` or `desc` |
+| `title` | - | Filter by title (partial match) |
+| `description` | - | Filter by description (partial match) |
 
 ## Auth Flow
 
 ```
-Register/Login → Get token → Send token in Authorization header → Access your todos
+Register/Login → Get accessToken + refreshToken
+  → Use accessToken in Authorization header → Access your todos
+  → When accessToken expires → POST /refresh with refreshToken → Get new pair
 ```
+
+Access tokens expire in 15 minutes. Refresh tokens expire in 7 days and rotate on each use. Reuse of an old refresh token revokes the entire token family.
 
 No token? `401 Unauthorized`. Not your todo? `403 Forbidden`. Simple rules.
 
 ## Response Examples
 
 **Registration/Login:**
+
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
 
 **Get Todos (paginated):**
+
 ```json
 {
   "data": [
     {
-      "id": 1,
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "title": "Buy groceries",
       "description": "Buy milk, eggs, and bread"
     }
@@ -88,6 +107,7 @@ No token? `401 Unauthorized`. Not your todo? `403 Forbidden`. Simple rules.
 | `401` | Who are you? Log in first. |
 | `403` | Nice try. That's not yours. |
 | `404` | Doesn't exist. Never did. (Maybe.) |
+| `409` | Already exists. You're not that original. |
 | `500` | Something broke. Not your fault. (Probably.) |
 
 ## Getting Started
@@ -102,7 +122,9 @@ Set up your environment:
 
 ```bash
 cp .env.example .env
-# Fill in your Postgres credentials and JWT secret
+# Fill in your values:
+#   TUDO_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB,
+#   POSTGRES_PORT, HOST, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET
 ```
 
 Start the database:
@@ -122,21 +144,36 @@ npm run dev
 ## Project Structure
 
 ```
-doit/
+tudo/
 ├── src/
 │   ├── index.ts
-│   ├── routes/
-│   │   ├── authRouter.ts
-│   │   └── todosRouter.ts
 │   ├── controllers/
 │   │   ├── authController.ts
-│   │   └── todosController.ts
+│   │   └── todoController.ts
+│   ├── services/
+│   │   ├── authService.ts
+│   │   ├── todoService.ts
+│   │   └── tokenService.ts
 │   ├── queries/
-│   │   ├── userQueries.ts
-│   │   └── todoQueries.ts
+│   │   ├── authQueries.ts
+│   │   ├── todoQueries.ts
+│   │   └── tokenQueries.ts
+│   ├── routes/
+│   │   ├── authRouter.ts
+│   │   └── todoRouter.ts
 │   ├── middleware/
 │   │   ├── authenticate.ts
+│   │   ├── errorHandler.ts
 │   │   └── validate.ts
+│   ├── errors/
+│   │   └── AppError.ts
+│   ├── types/
+│   │   ├── auth.ts
+│   │   ├── express.d.ts
+│   │   ├── todos.ts
+│   │   └── tokens.ts
+│   ├── utils/
+│   │   └── auth.ts
 │   └── db/
 │       └── db.ts
 ├── db/
@@ -147,9 +184,9 @@ doit/
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 26+ (uses `node:crypto` Argon2 and `--env-file` flag)
 - Docker (for PostgreSQL)
-- A JWT secret (longer than your attention span)
+- Two JWT secrets: one for access tokens, one for refresh tokens
 
 ## Credit
 
@@ -157,4 +194,4 @@ Built as a solution to the [Todo List API](https://roadmap.sh/projects/todo-list
 
 ## License
 
-MIT — fork it, finish it, or don't. I'm not your todo list.
+MIT - fork it, finish it, or don't. I'm not your todo list.
