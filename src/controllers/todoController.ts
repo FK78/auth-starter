@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { insertTodo, editTodo, removeTodo, getTodos, getTotalTodos } from "../services/todoService.ts";
+import { insertTodo, editTodo, removeTodo, getTodos } from "../services/todoService.ts";
 
 export const createTodo = async (req: Request, res: Response) => {
   const result = await insertTodo(req.body, req.user!.id);

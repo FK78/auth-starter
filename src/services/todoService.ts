@@ -1,6 +1,5 @@
 import { AppError } from "../errors/AppError.ts";
 import {
-  countTodos,
   deleteTodo,
   fetchTodos,
   getUserIdForTodoById,
