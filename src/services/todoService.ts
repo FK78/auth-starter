@@ -1,6 +1,7 @@
 import { AppError } from "../errors/AppError.ts";
 import {
   deleteTodo,
+  fetchTodos,
   getUserIdForTodoById,
   saveTodo,
   updateTodo,
@@ -44,4 +45,8 @@ export const removeTodo = async (userId: string, noteId: string) => {
     throw new AppError("Forbidden", 403);
   }
   await deleteTodo(userId, noteId);
+};
+
+export const getTodos = async (userId: string, page: number, limit: number) => {
+  return await fetchTodos(userId, page, limit);
 };
