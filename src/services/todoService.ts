@@ -49,11 +49,5 @@ export const removeTodo = async (userId: string, noteId: string) => {
 };
 
 export const getTodos = async (userId: string, page: number, limit: number) => {
-  const result = await fetchTodos(userId, page, limit);
-  return result
-};
-
-export const getTotalTodos = async (userId: string) => {
-  const result = await countTodos(userId);
-  return result
+  return await fetchTodos(userId, page, limit);
 };

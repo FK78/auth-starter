@@ -67,19 +67,12 @@ export const fetchTodos = async (
   page: number,
   limit: number
 ) => {
+  const offset = (page - 1) * limit;
   const result = await pool.query(
-    "SELECT * FROM todos WHERE user_id = $1 ORDER BY created_at DESC LIMIT $3 OFFSET ($2 - 1) * $3 ",
-    [userId, page, limit],
+    "SELECT id, title, description, COUNT(*) AS total FROM todos WHERE user_id = $1 ORDER BY created_at DESC LIMIT $3 OFFSET $2 ",
+    [userId, offset, limit],
   );
-  return result.rows
-};
-
-export const countTodos = async (
-  userId: string,
-) => {
-  const result = await pool.query(
-    "SELECT COUNT(*) FROM todos WHERE user_id = $1",
-    [userId],
-  );
-  return result.rows[0].count
+  const total = result.rows[0]?.total ?? 0;
+  const data = result.rows.map(({ total, ...row }) => row);
+  return { data, total: parseInt(total) }
 };

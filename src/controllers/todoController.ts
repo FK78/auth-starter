@@ -19,11 +19,8 @@ export const deleteTodo = async (req: Request, res: Response) => {
 };
 
 export const retrieveTodos = async (req: Request, res: Response) => {
-  let page = parseInt(req.query.page as string) || 1;
-  let limit = parseInt(req.query.limit as string) || 10;
-  if (page < 1) page = 1;
-  if (limit < 1) limit = 10;
-  const result = await getTodos(req.user!.id, page, limit)
-  const total = await getTotalTodos(req.user!.id)
-  res.status(200).json({ data: result, page: page, limit: limit, total: parseInt(total) })
+  const page = Math.max(parseInt(req.query.page as string) || 1, 1);
+  const limit = Math.max(parseInt(req.query.limit as string) || 10, 10);
+  const { data, total } = await getTodos(req.user!.id, page, limit)
+  res.status(200).json({ data: data, page: page, limit: limit, total: total })
 }
