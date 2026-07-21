@@ -1,21 +1,6 @@
 import type { PoolClient } from "pg";
 import { pool } from "../db/db.ts";
-
-export type RevokedReason = "reuse_detected" | "logout" | "admin_revoked";
-
-export interface RefreshToken {
-  id: string;
-  jti: string;
-  tokenHash: string;
-  userId: string;
-  tokenFamilyId: string;
-  replacedById?: string | null;
-  revokedAt: Date | null;
-  revokedReason: RevokedReason | null;
-  expiresAt: Date;
-  createdAt: Date;
-}
-
+import type { RefreshToken, RevokedReason } from "../types/tokens.ts";
 
 interface RefreshTokenRow {
   id: string;
@@ -29,6 +14,7 @@ interface RefreshTokenRow {
   revoked_reason: RevokedReason | null;
   created_at: Date;
 }
+
 
 const mapRow = (row: RefreshTokenRow): RefreshToken => ({
   id: row.id,

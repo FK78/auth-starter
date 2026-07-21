@@ -6,8 +6,9 @@ import {
   saveTodo,
   updateTodo,
 } from "../queries/todoQueries.ts";
+import type { TodoFilters } from "../types/todos.ts";
 
-export type Todo = {
+type Todo = {
   title: string;
   description: string;
 };
@@ -47,6 +48,16 @@ export const removeTodo = async (userId: string, noteId: string) => {
   await deleteTodo(userId, noteId);
 };
 
-export const getTodos = async (userId: string, page: number, limit: number) => {
-  return await fetchTodos(userId, page, limit);
+export const getTodos = async (
+  userId: string,
+  page: number,
+  limit: number,
+  { sort, order, title, description }: TodoFilters,
+) => {
+  return await fetchTodos(userId, page, limit, {
+    sort,
+    order,
+    title,
+    description,
+  });
 };

@@ -1,10 +1,5 @@
 import { pool } from "../db/db.ts";
-
-export interface TodoResponse {
-  id: string;
-  title: string;
-  description: string;
-}
+import { SORT_COLUMNS, SORT_ORDERS, type TodoFilters, type TodoResponse } from "../types/todos.ts";
 
 interface TodoRow {
   id: string;
@@ -37,7 +32,7 @@ export const updateTodo = async (
   title: string,
   description: string,
   userId: string,
-  todoId: string
+  todoId: string,
 ) => {
   const result = await pool.query(
     "UPDATE todos SET title = $1, description = $2 WHERE user_id = $3 AND id = $4 RETURNING id, title, description",
@@ -48,31 +43,54 @@ export const updateTodo = async (
 };
 
 export const getUserIdForTodoById = async (todoId: string) => {
-  const result = await pool.query("SELECT user_id FROM todos WHERE id = $1", [todoId])
+  const result = await pool.query("SELECT user_id FROM todos WHERE id = $1", [
+    todoId,
+  ]);
   return result.rows[0]?.user_id;
-}
+};
 
-export const deleteTodo = async (
-  userId: string,
-  todoId: string
-) => {
-  await pool.query(
-    "DELETE FROM todos WHERE user_id = $1 AND id = $2",
-    [userId, todoId],
-  );
+export const deleteTodo = async (userId: string, todoId: string) => {
+  await pool.query("DELETE FROM todos WHERE user_id = $1 AND id = $2", [
+    userId,
+    todoId,
+  ]);
 };
 
 export const fetchTodos = async (
   userId: string,
   page: number,
-  limit: number
+  limit: number,
+  { sort, order, title, description }: TodoFilters,
 ) => {
   const offset = (page - 1) * limit;
+
+  let query = `SELECT id, title, description, COUNT(*) OVER() AS total FROM todos WHERE user_id = $1`
+  const params: any[] = [userId]
+
+  if (title) {
+    params.push(`%${title}%`)
+    query += ` AND title ILIKE $${params.length}`;
+  }
+
+  if (description) {
+    params.push(`%${description}%`)
+    query += ` AND description ILIKE $${params.length}`;
+  }
+
+  const sortColumn = SORT_COLUMNS[sort] ?? SORT_COLUMNS.created_at
+  const sortOrder = SORT_ORDERS[order] ?? SORT_ORDERS.asc
+  query += ` ORDER BY ${sortColumn} ${sortOrder}`
+
+  params.push(limit);
+  query += ` LIMIT $${params.length}`
+
+  params.push(offset);
+  query += ` OFFSET $${params.length}`
+
   const result = await pool.query(
-    "SELECT id, title, description, COUNT(*) OVER() AS total FROM todos WHERE user_id = $1 ORDER BY created_at DESC LIMIT $3 OFFSET $2",
-    [userId, offset, limit],
+    query, params
   );
   const total = result.rows[0]?.total ?? 0;
   const data = result.rows.map(({ total, ...row }) => row);
-  return { data, total: parseInt(total) }
+  return { data, total: parseInt(total) };
 };

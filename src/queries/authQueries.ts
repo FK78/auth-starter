@@ -1,12 +1,6 @@
 import type { PoolClient } from "pg";
 import { pool } from "../db/db.ts";
-
-export interface UserRecord {
-  id: string;
-  name: string;
-  email: string;
-  passwordHash: string;
-}
+import type { UserRecord } from "../types/auth.ts";
 
 interface UserRow {
   id: string;

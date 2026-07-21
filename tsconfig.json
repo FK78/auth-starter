@@ -12,7 +12,6 @@
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "target": "esnext",
-    "types": [],
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
