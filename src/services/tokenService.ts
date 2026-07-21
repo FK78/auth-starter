@@ -7,7 +7,7 @@ import {
   type RefreshToken,
 } from "../queries/tokenQueries.ts";
 import type { AuthUser } from "../types/auth.ts";
-import { pool } from "../db/db.ts";
+import { pool, withTransaction } from "../db/db.ts";
 import type { PoolClient } from "pg";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -59,9 +59,7 @@ export const rotateTokenPair = async (
   user: AuthUser,
   oldToken: RefreshToken,
 ) => {
-  const client = await pool.connect()
-  try {
-    await client.query("BEGIN");
+  return await withTransaction(async (client) => {
     await markTokenReplaced(oldToken.id, client);
     const { accessToken, refreshToken, newRow } = await createAndPersistTokenPair(
       user,
@@ -69,12 +67,6 @@ export const rotateTokenPair = async (
       client
     );
     await linkReplacedToken(oldToken.id, newRow.id, client);
-    await client.query("COMMIT");
     return { accessToken, refreshToken };
-  } catch (err) {
-    await client.query("ROLLBACK");
-    throw err
-  } finally {
-    client.release()
-  }
+  })
 };
