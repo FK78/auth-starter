@@ -83,10 +83,19 @@ export const findRefreshTokenByJti = async (
 
 export const markTokenReplaced = async (
   oldTokenId: string,
+): Promise<void> => {
+  await pool.query(
+    `UPDATE refresh_tokens SET revoked_at = now() WHERE id = $1`,
+    [oldTokenId],
+  );
+};
+
+export const linkReplacedToken = async (
+  oldTokenId: string,
   newTokenId: string,
 ): Promise<void> => {
   await pool.query(
-    `UPDATE refresh_tokens SET replaced_by_id = $2, revoked_at = now() WHERE id = $1`,
+    `UPDATE refresh_tokens SET replaced_by_id = $2 WHERE id = $1`,
     [oldTokenId, newTokenId],
   );
 };
