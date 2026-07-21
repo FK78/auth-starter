@@ -1,4 +1,4 @@
-import type { Pool, PoolClient } from "pg";
+import type { PoolClient } from "pg";
 import { pool } from "../db/db.ts";
 
 export type RevokedReason = "reuse_detected" | "logout" | "admin_revoked";
@@ -75,8 +75,10 @@ export const saveRefreshToken = async (
 
 export const findRefreshTokenByJti = async (
   jti: string,
+  client?: PoolClient
 ): Promise<RefreshToken | null> => {
-  const result = await pool.query<RefreshTokenRow>(
+  const db = client || pool
+  const result = await db.query<RefreshTokenRow>(
     `SELECT * FROM refresh_tokens WHERE jti = $1 FOR UPDATE`,
     [jti],
   );
@@ -108,9 +110,10 @@ export const linkReplacedToken = async (
 };
 
 export const revokeTokenFamily = async (
-  tokenFamilyId: string, reason: string
+  tokenFamilyId: string, reason: string, client?: PoolClient
 ): Promise<void> => {
-  await pool.query(
+  const db = client || pool
+  await db.query(
     `UPDATE refresh_tokens SET revoked_at = now(), revoked_reason = $2
     WHERE token_family_id = $1 AND revoked_at IS NULL`,
     [tokenFamilyId, reason],
