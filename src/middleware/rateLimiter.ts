@@ -2,16 +2,14 @@ import type { Request, Response, NextFunction } from "express";
 
 export const rateLimiter = (windowMs: number, maxTries: number, keyFn?: (req: Request) => string) => {
     const rateLimitMap = new Map<string, { count: number; startTime: number }>();
-    setInterval(() => {
-        const currentTime = Date.now();
-        rateLimitMap.forEach((obj, ip) => {
-            if (currentTime - obj.startTime > windowMs) {
-                rateLimitMap.delete(ip);
-            }
-        });
-    }, windowMs);
 
     return (req: Request, res: Response, next: NextFunction) => {
+        if (rateLimitMap.size > 5000) {
+            const now = Date.now();
+            rateLimitMap.forEach((entry, key) => {
+                if (now - entry.startTime > windowMs) rateLimitMap.delete(key)
+            })
+        }
         const key = keyFn ? keyFn(req) : (req.ip ?? "unknown");
         const currentUserObject = rateLimitMap.get(key);
         const currentTime = Date.now();
