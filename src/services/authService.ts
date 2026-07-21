@@ -90,7 +90,7 @@ export const refreshTokens = async (incomingRefreshToken: string) => {
       throw new AppError("Refresh token expired", 401);
     }
 
-    const user = await findUserById(tokenRow.userId);
+    const user = await findUserById(tokenRow.userId, client);
     if (!user) {
       throw new AppError("User not found", 401);
     }
