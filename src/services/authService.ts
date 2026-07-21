@@ -82,7 +82,7 @@ export const refreshTokens = async (incomingRefreshToken: string) => {
     }
 
     if (tokenRow.revokedAt || tokenRow.replacedById) {
-      await revokeTokenFamily(tokenRow.tokenFamilyId, "reuse_detected", client);
+      await revokeTokenFamily(tokenRow.tokenFamilyId, "reuse_detected");
       throw new AppError("Refresh token reuse detected", 401);
     }
 

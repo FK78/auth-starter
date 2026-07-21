@@ -110,10 +110,9 @@ export const linkReplacedToken = async (
 };
 
 export const revokeTokenFamily = async (
-  tokenFamilyId: string, reason: string, client?: PoolClient
+  tokenFamilyId: string, reason: string
 ): Promise<void> => {
-  const db = client || pool
-  await db.query(
+  await pool.query(
     `UPDATE refresh_tokens SET revoked_at = now(), revoked_reason = $2
     WHERE token_family_id = $1 AND revoked_at IS NULL`,
     [tokenFamilyId, reason],
