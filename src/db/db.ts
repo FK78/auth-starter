@@ -8,7 +8,7 @@ export const pool = new Pool({
   database: process.env.POSTGRES_DB,
 })
 
-export const withTransaction = async (fn: (client: PoolClient) => Promise<T>): Promise<T> => {
+export const withTransaction = async <T>(fn: (client: PoolClient) => Promise<T>): Promise<T> => {
   const client = await pool.connect()
   try {
     await client.query("BEGIN");
