@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  RESTful API with JWT access/refresh token rotation, pagination, sorting, filtering, and the audacity to tell you you're unauthorized.
+  RESTful API with JWT access/refresh token rotation, rate limiting, pagination, sorting, filtering, and the audacity to tell you you're unauthorized.
 </p>
 
 ---
@@ -25,6 +25,7 @@ Because todo apps are the "Hello World" of backend development. But this one has
 - **pg** - raw SQL, no ORM
 - **jsonwebtoken** - access + refresh token rotation with family-based reuse detection
 - **Argon2id** (via `node:crypto`) - because "password123" shouldn't be stored in plain text
+- **In-memory rate limiting** - sliding window per-route protection
 
 ## Endpoints
 
@@ -66,7 +67,20 @@ Register/Login → Get accessToken + refreshToken
 
 Access tokens expire in 15 minutes. Refresh tokens expire in 7 days and rotate on each use. Reuse of an old refresh token revokes the entire token family.
 
-No token? `401 Unauthorized`. Not your todo? `403 Forbidden`. Simple rules.
+No token? `401 Unauthorized`. Not your todo? `403 Forbidden`. Too many requests? `429 Too Many Requests`. Simple rules.
+
+## Rate Limiting
+
+All routes are rate-limited using an in-memory sliding window approach:
+
+| Route | Window | Max Requests | Key |
+|-------|--------|-------------|-----|
+| `POST /register` | 1 min | 5 | IP |
+| `POST /login` | 1 min | 5 | IP + email |
+| `POST /refresh` | 1 min | 10 | IP |
+| Todo routes | 1 hour | 100 | User ID (falls back to IP) |
+
+Rate limit headers are included in responses: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `Retry-After` (on 429).
 
 ## Response Examples
 
@@ -108,6 +122,7 @@ No token? `401 Unauthorized`. Not your todo? `403 Forbidden`. Simple rules.
 | `403` | Nice try. That's not yours. |
 | `404` | Doesn't exist. Never did. (Maybe.) |
 | `409` | Already exists. You're not that original. |
+| `429` | You're not finishing todos this fast. Slow down. |
 | `500` | Something broke. Not your fault. (Probably.) |
 
 ## Getting Started
@@ -148,22 +163,23 @@ tudo/
 ├── src/
 │   ├── index.ts
 │   ├── controllers/
-│   │   ├── authController.ts
-│   │   └── todoController.ts
+│   │   ├── auth.controller.ts
+│   │   └── todo.controller.ts
 │   ├── services/
-│   │   ├── authService.ts
-│   │   ├── todoService.ts
-│   │   └── tokenService.ts
+│   │   ├── auth.service.ts
+│   │   ├── todo.service.ts
+│   │   └── token.service.ts
 │   ├── queries/
-│   │   ├── authQueries.ts
-│   │   ├── todoQueries.ts
-│   │   └── tokenQueries.ts
+│   │   ├── auth.queries.ts
+│   │   ├── todo.queries.ts
+│   │   └── token.queries.ts
 │   ├── routes/
-│   │   ├── authRouter.ts
-│   │   └── todoRouter.ts
+│   │   ├── auth.router.ts
+│   │   └── todo.router.ts
 │   ├── middleware/
 │   │   ├── authenticate.ts
 │   │   ├── errorHandler.ts
+│   │   ├── rateLimiter.ts
 │   │   └── validate.ts
 │   ├── errors/
 │   │   └── AppError.ts
