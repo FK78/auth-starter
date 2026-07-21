@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 
-export const rateLimiter = (windowMs: number, maxTries: number) => {
+export const rateLimiter = (windowMs: number, maxTries: number, keyFn?: (req: Request) => string) => {
     const rateLimitMap = new Map<string, { count: number; startTime: number }>();
     setInterval(() => {
         const currentTime = Date.now();
@@ -12,8 +12,8 @@ export const rateLimiter = (windowMs: number, maxTries: number) => {
     }, windowMs);
 
     return (req: Request, res: Response, next: NextFunction) => {
-        const ip = req.ip ?? "unknown";
-        const currentUserObject = rateLimitMap.get(ip);
+        const key = keyFn ? keyFn(req) : (req.ip ?? "unknown");
+        const currentUserObject = rateLimitMap.get(key);
         const currentTime = Date.now();
 
         if (currentUserObject) {
@@ -32,9 +32,9 @@ export const rateLimiter = (windowMs: number, maxTries: number) => {
                 currentUserObject.count++;
             }
         } else {
-            rateLimitMap.set(ip, { count: 1, startTime: currentTime });
+            rateLimitMap.set(key, { count: 1, startTime: currentTime });
         }
-        const userObjForRes = rateLimitMap.get(ip);
+        const userObjForRes = rateLimitMap.get(key);
         res.set("X-RateLimit-Limit", String(maxTries))
         res.set("X-RateLimit-Remaining", String(maxTries - userObjForRes!.count))
         res.set("X-RateLimit-Reset", String(Math.ceil((userObjForRes!.startTime + windowMs) / 1000)))
