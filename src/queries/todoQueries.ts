@@ -69,7 +69,7 @@ export const fetchTodos = async (
 ) => {
   const offset = (page - 1) * limit;
   const result = await pool.query(
-    "SELECT id, title, description, COUNT(*) OVER() AS total FROM todos WHERE user_id = $1 ORDER BY created_at DESC LIMIT $3 OFFSET $2",
+    "SELECT id, title, description, COUNT(*) OVER() AS total FROM todos WHERE user_id = $1 ORDER BY created_at ASC LIMIT $3 OFFSET $2",
     [userId, offset, limit],
   );
   const total = result.rows[0]?.total ?? 0;
