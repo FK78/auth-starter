@@ -7,6 +7,8 @@ import {
   type RefreshToken,
 } from "../queries/tokenQueries.ts";
 import type { AuthUser } from "../types/auth.ts";
+import { pool } from "../db/db.ts";
+import type { PoolClient } from "pg";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -28,6 +30,7 @@ const signRefreshToken = (user: AuthUser, jti: string) => {
 const createAndPersistTokenPair = async (
   user: AuthUser,
   tokenFamilyId: string,
+  client?: PoolClient
 ) => {
   const jti = randomUUID();
   const accessToken = signAccessToken(user);
@@ -39,7 +42,7 @@ const createAndPersistTokenPair = async (
     userId: user.id,
     tokenFamilyId,
     expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
-  });
+  }, client);
 
   return { accessToken, refreshToken, newRow };
 };
@@ -56,11 +59,21 @@ export const rotateTokenPair = async (
   user: AuthUser,
   oldToken: RefreshToken,
 ) => {
-  await markTokenReplaced(oldToken.id);
-  const { accessToken, refreshToken, newRow } = await createAndPersistTokenPair(
-    user,
-    oldToken.tokenFamilyId,
-  );
-  await linkReplacedToken(oldToken.id, newRow.id);
-  return { accessToken, refreshToken };
+  const client = await pool.connect()
+  try {
+    await client.query("BEGIN");
+    await markTokenReplaced(oldToken.id, client);
+    const { accessToken, refreshToken, newRow } = await createAndPersistTokenPair(
+      user,
+      oldToken.tokenFamilyId,
+      client
+    );
+    await linkReplacedToken(oldToken.id, newRow.id, client);
+    return { accessToken, refreshToken };
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err
+  } finally {
+    client.release()
+  }
 };
