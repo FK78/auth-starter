@@ -15,7 +15,7 @@ import {
 } from "../queries/tokenQueries.ts";
 import { withTransaction } from "../db/db.ts";
 
-export type User = {
+type User = {
   name: string;
   email: string;
   password: string;
@@ -97,27 +97,4 @@ export const refreshTokens = async (incomingRefreshToken: string) => {
 
     return await rotateTokenPair(user, tokenRow, client);
   })
-};
-
-export const verifyToken = async (incomingAccessToken: string) => {
-  let payload: { sub: string; expiresAt: Date };
-  try {
-    payload = jwt.verify(
-      incomingAccessToken,
-      process.env.ACCESS_TOKEN_SECRET!,
-    ) as typeof payload;
-  } catch {
-    throw new AppError("Invalid access token", 401);
-  }
-
-  if (payload.expiresAt < new Date()) {
-    throw new AppError("Access token expired", 401);
-  }
-
-  const user = await findUserById(payload.sub);
-  if (!user) {
-    throw new AppError("User not found", 401);
-  }
-
-  return true;
 };

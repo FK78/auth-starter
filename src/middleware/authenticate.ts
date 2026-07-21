@@ -5,7 +5,7 @@ import { findUserById } from "../queries/authQueries.ts";
 
 export const authenticate = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ) => {
   const authHeader = req.headers.authorization;

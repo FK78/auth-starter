@@ -5,6 +5,7 @@ import {
   removeTodo,
   getTodos,
 } from "../services/todoService.ts";
+import { SORT_COLUMNS, SORT_ORDERS } from "../types/todos.ts";
 
 export const createTodo = async (req: Request, res: Response) => {
   const result = await insertTodo(req.body, req.user!.id);
@@ -24,12 +25,12 @@ export const deleteTodo = async (req: Request, res: Response) => {
 };
 
 export const retrieveTodos = async (req: Request, res: Response) => {
-  const allowedSorts = ["created_at", "title"];
+  const allowedSorts = Object.keys(SORT_COLUMNS)
   const sort = (allowedSorts.includes(req.query.sort as string)
     ? req.query.sort
     : "created_at") as "created_at" | "title";
 
-  const allowedOrder = ["asc", "desc"];
+  const allowedOrder = Object.keys(SORT_ORDERS)
   const order = (allowedOrder.includes(req.query.order as string)
     ? req.query.order
     : "asc") as "asc" | "desc";

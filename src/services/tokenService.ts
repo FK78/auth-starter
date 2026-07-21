@@ -4,10 +4,10 @@ import {
   linkReplacedToken,
   markTokenReplaced,
   saveRefreshToken,
-  type RefreshToken,
 } from "../queries/tokenQueries.ts";
-import type { AuthUser } from "../types/auth.ts";
 import type { PoolClient } from "pg";
+import type { RefreshToken } from "../types/tokens.ts";
+import type { AuthUser } from "../types/auth.ts";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 

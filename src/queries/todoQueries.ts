@@ -1,11 +1,5 @@
 import { pool } from "../db/db.ts";
-import type { TodoFilters } from "../services/todoService.ts";
-
-export interface TodoResponse {
-  id: string;
-  title: string;
-  description: string;
-}
+import { SORT_COLUMNS, SORT_ORDERS, type TodoFilters, type TodoResponse } from "../types/todos.ts";
 
 interface TodoRow {
   id: string;
@@ -69,6 +63,7 @@ export const fetchTodos = async (
   { sort, order, title, description }: TodoFilters,
 ) => {
   const offset = (page - 1) * limit;
+
   let query = `SELECT id, title, description, COUNT(*) OVER() AS total FROM todos WHERE user_id = $1`
   const params: any[] = [userId]
 
@@ -82,7 +77,9 @@ export const fetchTodos = async (
     query += ` AND description ILIKE $${params.length}`;
   }
 
-  query += ` ORDER BY ${sort} ${order}`
+  const sortColumn = SORT_COLUMNS[sort] ?? SORT_COLUMNS.created_at
+  const sortOrder = SORT_ORDERS[order] ?? SORT_ORDERS.asc
+  query += ` ORDER BY ${sortColumn} ${sortOrder}`
 
   params.push(limit);
   query += ` LIMIT $${params.length}`

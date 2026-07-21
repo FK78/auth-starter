@@ -6,17 +6,11 @@ import {
   saveTodo,
   updateTodo,
 } from "../queries/todoQueries.ts";
+import type { TodoFilters } from "../types/todos.ts";
 
-export type Todo = {
+type Todo = {
   title: string;
   description: string;
-};
-
-export type TodoFilters = {
-  sort: "created_at" | "title";
-  order: "asc" | "desc";
-  title: string | undefined;
-  description: string | undefined;
 };
 
 export const insertTodo = async (
