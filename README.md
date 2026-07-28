@@ -5,86 +5,90 @@
 <h1 align="center">tudo</h1>
 
 <p align="center">
-  <em>A todo API with auth, because your tasks deserve security even if your passwords don't.</em>
+  A secure, production-ready todo API with full authentication and token management.
 </p>
 
 <p align="center">
-  RESTful API with JWT access/refresh token rotation, rate limiting, pagination, sorting, filtering, and the audacity to tell you you're unauthorized.
+  RESTful API · JWT access/refresh token rotation · Rate limiting · Pagination · Filtering & sorting
 </p>
 
 ---
 
-## Why?
+## Overview
 
-Because todo apps are the "Hello World" of backend development. But this one has login, token rotation, and will actually judge you for not finishing your tasks.
+tudo is a RESTful todo API built with Express 5 and TypeScript. It implements JWT-based authentication with refresh token rotation and family-based reuse detection, per-route rate limiting, and paginated/filterable todo management with per-user ownership enforcement.
 
 ## Tech Stack
 
-- **Node.js** + **Express 5** + **TypeScript** - type-safe productivity guilt
-- **PostgreSQL** - running in Docker, storing your procrastination
-- **pg** - raw SQL, no ORM
-- **jsonwebtoken** - access + refresh token rotation with family-based reuse detection
-- **Argon2id** (via `node:crypto`) - because "password123" shouldn't be stored in plain text
-- **In-memory rate limiting** - sliding window per-route protection
+| Layer | Technology |
+|-------|-----------|
+| Runtime | Node.js 26+ |
+| Framework | Express 5 |
+| Language | TypeScript |
+| Database | PostgreSQL (via Docker) |
+| DB Driver | pg (raw SQL, no ORM) |
+| Auth | JWT access + refresh tokens with rotation |
+| Hashing | Argon2id (native `node:crypto`) |
+| Rate Limiting | In-memory sliding window |
 
-## Endpoints
+## API Reference
 
-### Auth
+### Authentication
 
-| Method | Route | What it does |
-|--------|-------|-------------|
-| `POST` | `/register` | Join the productivity cult |
-| `POST` | `/login` | Prove you're you |
-| `POST` | `/refresh` | Rotate your tokens like a responsible adult |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/register` | Create a new user account |
+| `POST` | `/login` | Authenticate and receive token pair |
+| `POST` | `/refresh` | Rotate tokens using a valid refresh token |
 
-### Todos (authenticated)
+### Todos (requires authentication)
 
-| Method | Route | What it does |
-|--------|-------|-------------|
-| `POST` | `/todos` | Add another thing you won't do |
-| `GET` | `/todos` | Confront your backlog, paginated |
-| `PUT` | `/todos/:id` | Pretend you're making progress |
-| `DELETE` | `/todos/:id` | Acceptance is a stage of grief |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/todos` | Create a new todo |
+| `GET` | `/todos` | List todos with pagination, sorting, and filtering |
+| `PUT` | `/todos/:id` | Update a todo by ID |
+| `DELETE` | `/todos/:id` | Delete a todo by ID |
 
-#### GET /todos query parameters
+#### Query Parameters for `GET /todos`
 
 | Param | Default | Description |
 |-------|---------|-------------|
 | `page` | `1` | Page number |
 | `limit` | `1` (max `100`) | Items per page |
-| `sort` | `created_at` | Sort by `created_at` or `title` |
+| `sort` | `created_at` | Sort field: `created_at` or `title` |
 | `order` | `asc` | Sort direction: `asc` or `desc` |
 | `title` | - | Filter by title (partial match) |
 | `description` | - | Filter by description (partial match) |
 
-## Auth Flow
+## Authentication Flow
 
 ```
-Register/Login → Get accessToken + refreshToken
-  → Use accessToken in Authorization header → Access your todos
-  → When accessToken expires → POST /refresh with refreshToken → Get new pair
+Register/Login → accessToken + refreshToken
+  → accessToken in Authorization header → Access protected routes
+  → On expiry → POST /refresh with refreshToken → New token pair
 ```
 
-Access tokens expire in 15 minutes. Refresh tokens expire in 7 days and rotate on each use. Reuse of an old refresh token revokes the entire token family.
-
-No token? `401 Unauthorized`. Not your todo? `403 Forbidden`. Too many requests? `429 Too Many Requests`. Simple rules.
+- Access tokens expire in **15 minutes**
+- Refresh tokens expire in **7 days** and rotate on each use
+- Reuse of a previously rotated refresh token revokes the entire token family
 
 ## Rate Limiting
 
-All routes are rate-limited using an in-memory sliding window approach:
+All routes are protected with an in-memory sliding window rate limiter:
 
 | Route | Window | Max Requests | Key |
 |-------|--------|-------------|-----|
 | `POST /register` | 1 min | 5 | IP |
 | `POST /login` | 1 min | 5 | IP + email |
 | `POST /refresh` | 1 min | 10 | IP |
-| Todo routes | 1 hour | 100 | User ID (falls back to IP) |
+| Todo routes | 1 hour | 100 | User ID (fallback: IP) |
 
-Rate limit headers are included in responses: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `Retry-After` (on 429).
+Response headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `Retry-After` (on 429).
 
-## Response Examples
+## Response Format
 
-**Registration/Login:**
+**Authentication response:**
 
 ```json
 {
@@ -93,7 +97,7 @@ Rate limit headers are included in responses: `X-RateLimit-Limit`, `X-RateLimit-
 }
 ```
 
-**Get Todos (paginated):**
+**Paginated todo list:**
 
 ```json
 {
@@ -114,18 +118,25 @@ Rate limit headers are included in responses: `X-RateLimit-Limit`, `X-RateLimit-
 
 | Code | Meaning |
 |------|---------|
-| `200` | Here's your stuff |
-| `201` | Created. You're welcome. |
-| `204` | Deleted. Gone. Poof. |
-| `400` | You sent garbage. Try again. |
-| `401` | Who are you? Log in first. |
-| `403` | Nice try. That's not yours. |
-| `404` | Doesn't exist. Never did. (Maybe.) |
-| `409` | Already exists. You're not that original. |
-| `429` | You're not finishing todos this fast. Slow down. |
-| `500` | Something broke. Not your fault. (Probably.) |
+| `200` | Success |
+| `201` | Resource created |
+| `204` | Resource deleted |
+| `400` | Invalid request body or parameters |
+| `401` | Missing or invalid authentication |
+| `403` | Forbidden - resource belongs to another user |
+| `404` | Resource not found |
+| `409` | Conflict - resource already exists |
+| `429` | Rate limit exceeded |
+| `500` | Internal server error |
 
 ## Getting Started
+
+### Prerequisites
+
+- Node.js 26+ (uses native `node:crypto` Argon2 and `--env-file` flag)
+- Docker (for PostgreSQL)
+
+### Installation
 
 ```bash
 git clone https://github.com/FK78/tudo.git
@@ -133,76 +144,52 @@ cd tudo
 npm install
 ```
 
-Set up your environment:
+### Configuration
 
 ```bash
 cp .env.example .env
-# Fill in your values:
-#   TUDO_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB,
-#   POSTGRES_PORT, HOST, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET
 ```
 
-Start the database:
+Required environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `TUDO_PORT` | Server port |
+| `POSTGRES_USER` | Database username |
+| `POSTGRES_PASSWORD` | Database password |
+| `POSTGRES_DB` | Database name |
+| `POSTGRES_PORT` | Database port |
+| `HOST` | Database host |
+| `ACCESS_TOKEN_SECRET` | JWT signing secret for access tokens |
+| `REFRESH_TOKEN_SECRET` | JWT signing secret for refresh tokens |
+
+### Running
 
 ```bash
+# Start PostgreSQL
 docker compose up -d
-```
 
-Create tables (connect to Postgres and run the schema in `db/schema.sql`).
+# Apply schema (connect to Postgres and run db/schema.sql)
 
-Start the server:
-
-```bash
+# Start development server
 npm run dev
 ```
 
 ## Project Structure
 
 ```
-tudo/
-├── src/
-│   ├── index.ts
-│   ├── controllers/
-│   │   ├── auth.controller.ts
-│   │   └── todo.controller.ts
-│   ├── services/
-│   │   ├── auth.service.ts
-│   │   ├── todo.service.ts
-│   │   └── token.service.ts
-│   ├── queries/
-│   │   ├── auth.queries.ts
-│   │   ├── todo.queries.ts
-│   │   └── token.queries.ts
-│   ├── routes/
-│   │   ├── auth.router.ts
-│   │   └── todo.router.ts
-│   ├── middleware/
-│   │   ├── authenticate.ts
-│   │   ├── errorHandler.ts
-│   │   ├── rateLimiter.ts
-│   │   └── validate.ts
-│   ├── errors/
-│   │   └── AppError.ts
-│   ├── types/
-│   │   ├── auth.ts
-│   │   ├── express.d.ts
-│   │   ├── todos.ts
-│   │   └── tokens.ts
-│   ├── utils/
-│   │   └── auth.ts
-│   └── db/
-│       └── db.ts
-├── db/
-│   └── schema.sql
-├── compose.yml
-└── tsconfig.json
+src/
+├── index.ts                 # Application entry point
+├── controllers/             # Request handlers
+├── services/                # Business logic
+├── queries/                 # Database queries
+├── routes/                  # Route definitions
+├── middleware/              # Auth, validation, rate limiting, error handling
+├── errors/                  # Custom error classes
+├── types/                   # TypeScript type definitions
+├── utils/                   # Shared utilities
+└── db/                      # Database connection
 ```
-
-## Requirements
-
-- Node.js 26+ (uses `node:crypto` Argon2 and `--env-file` flag)
-- Docker (for PostgreSQL)
-- Two JWT secrets: one for access tokens, one for refresh tokens
 
 ## Credit
 
@@ -210,4 +197,4 @@ Built as a solution to the [Todo List API](https://roadmap.sh/projects/todo-list
 
 ## License
 
-MIT - fork it, finish it, or don't. I'm not your todo list.
+MIT
