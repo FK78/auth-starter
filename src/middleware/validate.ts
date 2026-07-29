@@ -3,7 +3,7 @@ import type { NextFunction, Request, Response } from "express";
 export const validate =
   (requiredFields: string[]) =>
   (req: Request, res: Response, next: NextFunction) => {
-    const missing = requiredFields.filter((f) => !req.body[f]);
+    const missing = requiredFields.filter((f) => !req.body[f]?.trim());
     if (missing.length) {
       return res
         .status(400)

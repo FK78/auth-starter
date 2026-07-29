@@ -8,6 +8,7 @@ import {
 import type { PoolClient } from "pg";
 import type { RefreshToken } from "../types/tokens.ts";
 import type { AuthUser } from "../types/auth.ts";
+import { generateOpaqueToken, hashToken } from "../utils/auth.ts";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -16,28 +17,18 @@ const signAccessToken = (user: AuthUser): string =>
     expiresIn: "15m", issuer: "tudo", audience: "tudo-api"
   });
 
-const signRefreshToken = (user: AuthUser, jti: string) => {
-  const refreshToken = jwt.sign(
-    { sub: user.id, jti, type: "refresh" },
-    process.env.REFRESH_TOKEN_SECRET!,
-    { expiresIn: "7d", issuer: "tudo", audience: "tudo-api" },
-  );
-  const tokenHash = createHash("sha256").update(refreshToken).digest("hex");
-  return { refreshToken, tokenHash };
-};
 
 const createAndPersistTokenPair = async (
   user: AuthUser,
   tokenFamilyId: string,
   client?: PoolClient
 ) => {
-  const jti = randomUUID();
   const accessToken = signAccessToken(user);
-  const { refreshToken, tokenHash } = signRefreshToken(user, jti);
+  const refreshToken = generateOpaqueToken()
+  const refreshTokenHash = hashToken(refreshToken)
 
   const newRow = await saveRefreshToken({
-    jti,
-    tokenHash,
+    refreshTokenHash,
     userId: user.id,
     tokenFamilyId,
     expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),

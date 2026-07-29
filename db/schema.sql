@@ -7,7 +7,6 @@ CREATE TABLE users (
 
 CREATE TABLE refresh_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    jti UUID NOT NULL UNIQUE,
     token_hash TEXT NOT NULL UNIQUE,
     user_id UUID NOT NULL REFERENCES users(id),
     token_family_id UUID NOT NULL,

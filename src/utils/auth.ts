@@ -1,4 +1,4 @@
-import { argon2, randomBytes, timingSafeEqual } from "node:crypto";
+import { argon2, createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 const ARGON_PARAMS = {
   memory: 65536,
@@ -43,3 +43,7 @@ export const compareHash = (storedHash: string, generatedHash: string) => {
     stored.length === generated.length && timingSafeEqual(stored, generated)
   );
 };
+
+export const generateOpaqueToken = (): string => randomBytes(32).toString("base64url")
+
+export const hashToken = (token: string): string => createHash("sha512").update(token).digest("hex")
