@@ -1,199 +1,146 @@
 <p align="center">
-  <img src="./logo.svg" alt="tudo logo" width="150" />
+  <img src="./logo.svg" width="80" alt="auth-starter logo" />
 </p>
 
-<h1 align="center">tudo</h1>
+<h1 align="center">auth-starter</h1>
 
-<p align="center">
-  A secure, production-ready todo API with full authentication and token management.
-</p>
-
-<p align="center">
-  RESTful API · JWT access/refresh token rotation · Rate limiting · Pagination · Filtering & sorting
-</p>
+<p align="center"><em>A JWT auth starter, so you don't have to relearn token rotation every time you start a project.</em></p>
 
 ---
 
-## Overview
+Minimal, dependency-light authentication scaffold: access/refresh token rotation with family-based reuse detection, Argon2id password hashing, and per-route rate limiting. Express 5 + TypeScript + PostgreSQL, raw SQL, no ORM.
 
-tudo is a RESTful todo API built with Express 5 and TypeScript. It implements JWT-based authentication with refresh token rotation and family-based reuse detection, per-route rate limiting, and paginated/filterable todo management with per-user ownership enforcement.
+## Why
+
+Because every new backend project needs the same JWT groundwork, and the interesting bugs live in the middleware, not in whatever domain object you're building this time round. This is that groundwork, decided once and reused every time.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Runtime | Node.js 26+ |
-| Framework | Express 5 |
-| Language | TypeScript |
-| Database | PostgreSQL (via Docker) |
-| DB Driver | pg (raw SQL, no ORM) |
-| Auth | JWT access + refresh tokens with rotation |
-| Hashing | Argon2id (native `node:crypto`) |
-| Rate Limiting | In-memory sliding window |
+- **Node.js** + **Express 5** + **TypeScript**
+- **PostgreSQL** - via `pg`, raw SQL, no ORM
+- **jsonwebtoken** - access + refresh token rotation with family-based reuse detection
+- **Argon2id** (via `node:crypto`) - no extra hashing dependency
+- **In-memory rate limiting** - sliding window, per-route
 
-## API Reference
+## Endpoints
 
-### Authentication
+| Method | Route       | What it does        |
+| ------ | ----------- | -------------------- |
+| `POST` | `/register` | Create a user        |
+| `POST` | `/login`    | Issue a token pair   |
+| `POST` | `/refresh`  | Rotate tokens        |
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/register` | Create a new user account |
-| `POST` | `/login` | Authenticate and receive token pair |
-| `POST` | `/refresh` | Rotate tokens using a valid refresh token |
+Everything past this point is yours: mount your own routers behind the `authenticate` middleware and you're covered.
 
-### Todos (requires authentication)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/todos` | Create a new todo |
-| `GET` | `/todos` | List todos with pagination, sorting, and filtering |
-| `PUT` | `/todos/:id` | Update a todo by ID |
-| `DELETE` | `/todos/:id` | Delete a todo by ID |
-
-#### Query Parameters for `GET /todos`
-
-| Param | Default | Description |
-|-------|---------|-------------|
-| `page` | `1` | Page number |
-| `limit` | `1` (max `100`) | Items per page |
-| `sort` | `created_at` | Sort field: `created_at` or `title` |
-| `order` | `asc` | Sort direction: `asc` or `desc` |
-| `title` | - | Filter by title (partial match) |
-| `description` | - | Filter by description (partial match) |
-
-## Authentication Flow
+## Auth Flow
 
 ```
 Register/Login → accessToken + refreshToken
-  → accessToken in Authorization header → Access protected routes
-  → On expiry → POST /refresh with refreshToken → New token pair
+  → Use accessToken in Authorization header on protected routes
+  → accessToken expires → POST /refresh with refreshToken → new pair
 ```
 
-- Access tokens expire in **15 minutes**
-- Refresh tokens expire in **7 days** and rotate on each use
-- Reuse of a previously rotated refresh token revokes the entire token family
+Access tokens expire in 15 minutes. Refresh tokens expire in 7 days and rotate on each use. Reusing an old refresh token revokes the entire token family.
+
+No token → `401 Unauthorized`. Invalid or reused refresh token → the whole family is revoked. Too many attempts → `429 Too Many Requests`.
 
 ## Rate Limiting
 
-All routes are protected with an in-memory sliding window rate limiter:
+| Route             | Window | Max Requests | Key         |
+| ------------------ | ------ | ------------- | ----------- |
+| `POST /register`   | 1 min  | 5              | IP          |
+| `POST /login`       | 1 min  | 5              | IP + email  |
+| `POST /refresh`     | 1 min  | 10             | IP          |
 
-| Route | Window | Max Requests | Key |
-|-------|--------|-------------|-----|
-| `POST /register` | 1 min | 5 | IP |
-| `POST /login` | 1 min | 5 | IP + email |
-| `POST /refresh` | 1 min | 10 | IP |
-| Todo routes | 1 hour | 100 | User ID (fallback: IP) |
-
-Response headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `Retry-After` (on 429).
-
-## Response Format
-
-**Authentication response:**
-
-```json
-{
-  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
-}
-```
-
-**Paginated todo list:**
-
-```json
-{
-  "data": [
-    {
-      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-      "title": "Buy groceries",
-      "description": "Buy milk, eggs, and bread"
-    }
-  ],
-  "page": 1,
-  "limit": 10,
-  "total": 1
-}
-```
-
-## Status Codes
-
-| Code | Meaning |
-|------|---------|
-| `200` | Success |
-| `201` | Resource created |
-| `204` | Resource deleted |
-| `400` | Invalid request body or parameters |
-| `401` | Missing or invalid authentication |
-| `403` | Forbidden - resource belongs to another user |
-| `404` | Resource not found |
-| `409` | Conflict - resource already exists |
-| `429` | Rate limit exceeded |
-| `500` | Internal server error |
+Rate limit state is in-memory, which is fine for a single instance. If you ever run this behind more than one instance, swap in a shared store (Redis) before relying on it - in-memory limiters don't share state across processes.
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 26+ (uses native `node:crypto` Argon2 and `--env-file` flag)
-- Docker (for PostgreSQL)
-
-### Installation
-
 ```bash
-git clone https://github.com/FK78/tudo.git
-cd tudo
+git clone https://github.com/FK78/auth-starter.git
+cd auth-starter
 npm install
 ```
 
-### Configuration
+Set up your environment:
 
 ```bash
 cp .env.example .env
+# Fill in your values:
+#   PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB,
+#   POSTGRES_PORT, HOST, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET
 ```
 
-Required environment variables:
-
-| Variable | Description |
-|----------|-------------|
-| `TUDO_PORT` | Server port |
-| `POSTGRES_USER` | Database username |
-| `POSTGRES_PASSWORD` | Database password |
-| `POSTGRES_DB` | Database name |
-| `POSTGRES_PORT` | Database port |
-| `HOST` | Database host |
-| `ACCESS_TOKEN_SECRET` | JWT signing secret for access tokens |
-| `REFRESH_TOKEN_SECRET` | JWT signing secret for refresh tokens |
-
-### Running
+Start the database:
 
 ```bash
-# Start PostgreSQL
 docker compose up -d
+```
 
-# Apply schema (connect to Postgres and run db/schema.sql)
+Create tables (connect to Postgres and run the schema in `db/schema.sql`).
 
-# Start development server
+Start the server:
+
+```bash
 npm run dev
 ```
 
 ## Project Structure
 
 ```
-src/
-├── index.ts                 # Application entry point
-├── controllers/             # Request handlers
-├── services/                # Business logic
-├── queries/                 # Database queries
-├── routes/                  # Route definitions
-├── middleware/              # Auth, validation, rate limiting, error handling
-├── errors/                  # Custom error classes
-├── types/                   # TypeScript type definitions
-├── utils/                   # Shared utilities
-└── db/                      # Database connection
+auth-starter/
+├── src/
+│   ├── index.ts
+│   ├── controllers/
+│   │   └── auth.controller.ts
+│   ├── services/
+│   │   ├── auth.service.ts
+│   │   └── token.service.ts
+│   ├── queries/
+│   │   ├── auth.queries.ts
+│   │   └── token.queries.ts
+│   ├── routes/
+│   │   └── auth.router.ts
+│   ├── middleware/
+│   │   ├── authenticate.ts
+│   │   ├── errorHandler.ts
+│   │   ├── rateLimiter.ts
+│   │   └── validate.ts
+│   ├── errors/
+│   │   └── AppError.ts
+│   ├── types/
+│   │   ├── auth.ts
+│   │   ├── express.d.ts
+│   │   └── tokens.ts
+│   ├── utils/
+│   │   └── auth.ts
+│   └── db/
+│       └── db.ts
+├── db/
+│   └── schema.sql
+├── compose.yml
+└── tsconfig.json
 ```
+
+## Requirements
+
+- Node.js 26+ (uses native `node:crypto` Argon2 and the `--env-file` flag)
+- Docker (for PostgreSQL)
+- Two JWT secrets: one for access tokens, one for refresh tokens
+
+## Using This as a Template
+
+Click **Use this template** above, or:
+
+```bash
+npx tiged FK78/auth-starter my-new-project
+```
+
+Then rename the package, drop your own domain routes behind `authenticate`, and build the thing you actually meant to build.
 
 ## Credit
 
-Built as a solution to the [Todo List API](https://roadmap.sh/projects/todo-list-api) project on roadmap.sh.
+Extracted from [tudo](https://github.com/FK78/tudo), a todo API built as a solution to the [Todo List API](https://roadmap.sh/projects/todo-list-api) project on roadmap.sh.
 
 ## License
 
