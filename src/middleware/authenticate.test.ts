@@ -73,6 +73,32 @@ describe("authenticate", () => {
     ).rejects.toThrow(AppError);
   });
 
+  it("throws for an unsigned alg: none token, even with a valid-looking payload", async () => {
+    const token = jwt.sign({ sub: "user-1", type: "access" }, null, {
+      algorithm: "none",
+      issuer: "auth-starter",
+      audience: "auth-starter-api",
+      expiresIn: "15m",
+    });
+
+    await expect(
+      authenticate(fakeReq(`Bearer ${token}`), {} as Response, vi.fn()),
+    ).rejects.toThrow(AppError);
+  });
+
+  it("throws for a token signed with the right secret but a different algorithm", async () => {
+    const token = jwt.sign({ sub: "user-1", type: "access" }, env.ACCESS_TOKEN_SECRET, {
+      algorithm: "HS384",
+      issuer: "auth-starter",
+      audience: "auth-starter-api",
+      expiresIn: "15m",
+    });
+
+    await expect(
+      authenticate(fakeReq(`Bearer ${token}`), {} as Response, vi.fn()),
+    ).rejects.toThrow(AppError);
+  });
+
   it("throws when the token has no sub claim", async () => {
     const token = sign({ type: "access" });
 
