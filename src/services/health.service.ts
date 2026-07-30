@@ -4,7 +4,7 @@ import { logger } from "../utils/logger.ts";
 
 export const checkDatabaseHealth = async (): Promise<void> => {
   try {
-    await pool.query(`SELECT * FROM MEEEE`);
+    await pool.query(`SELECT 1`);
   } catch (err) {
     logger.error(err, "Health check database query failed");
     throw new AppError("Service unavailable", 503);
