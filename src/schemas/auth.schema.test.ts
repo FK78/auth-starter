@@ -42,6 +42,36 @@ describe("registerSchema", () => {
 
     expect(result.success).toBe(false);
   });
+
+  it("rejects a password exactly one character below the minimum (7 chars)", () => {
+    const result = registerSchema.safeParse({
+      name: "Ada",
+      email: "ada@example.com",
+      password: "1234567",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a password exactly at the minimum (8 chars)", () => {
+    const result = registerSchema.safeParse({
+      name: "Ada",
+      email: "ada@example.com",
+      password: "12345678",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a name that is only whitespace, after trimming", () => {
+    const result = registerSchema.safeParse({
+      name: "   ",
+      email: "ada@example.com",
+      password: "correct-horse-battery",
+    });
+
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("loginSchema", () => {
