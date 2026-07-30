@@ -1,12 +1,12 @@
 import z from "zod";
 
 const envSchema = z.object({
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number().int().positive().default(3000),
   HOST: z.string().default("localhost"),
   POSTGRES_USER: z.string().min(1),
   POSTGRES_PASSWORD: z.string().min(1),
   POSTGRES_DB: z.string().min(1),
-  POSTGRES_PORT: z.coerce.number(),
+  POSTGRES_PORT: z.coerce.number().int().positive(),
   ACCESS_TOKEN_SECRET: z.string().min(1),
   ALLOWED_ORIGINS: z.string().optional()
 });
