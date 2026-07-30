@@ -30,22 +30,6 @@ jobs:
 
   integration-tests:
     runs-on: ubuntu-latest
-    services:
-      db:
-        image: postgres
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: auth_starter_test
-        ports:
-          - 55433:5432
-        volumes:
-          - ${{ github.workspace }}/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 2s
-          --health-timeout 5s
-          --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -53,4 +37,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run test:integration:db:up
       - run: npm run test:integration
+      - run: npm run test:integration:db:down
+        if: always()
