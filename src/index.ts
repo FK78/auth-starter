@@ -5,9 +5,12 @@ import cors from "cors";
 import { pool } from "./db/db.ts";
 import { errorHandler, routeNotFound } from "./middleware/errorHandler.ts";
 import { env } from "./config/env.ts";
+import { pinoHttp } from "pino-http";
+import { logger } from "./utils/logger.ts";
 
 const port = env.PORT;
 const app = express();
+app.use(pinoHttp({logger}))
 const allowedOrigins = (env.ALLOWED_ORIGINS ?? "")
   .split(",")
   .map((o) => o.trim())
@@ -24,9 +27,9 @@ app.use(express.json());
 
 try {
   await pool.query("SELECT 1");
-  console.log("DB Connected");
+  logger.info("DB Connected");
 } catch (err) {
-  console.error(err);
+  logger.error(err);
   process.exit(1);
 }
 
@@ -37,5 +40,5 @@ app.use(routeNotFound);
 app.use(errorHandler);
 
 app.listen(port, () => {
-  console.log(`Server is online at port ${port}`);
+  logger.info(`Server is online at port ${port}`);
 });
