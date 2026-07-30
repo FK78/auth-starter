@@ -4,7 +4,6 @@ import type { RefreshToken, RevokedReason } from "../types/tokens.ts";
 
 interface RefreshTokenRow {
   id: string;
-  jti: string;
   token_hash: string;
   user_id: string;
   token_family_id: string;
@@ -15,11 +14,9 @@ interface RefreshTokenRow {
   created_at: Date;
 }
 
-
 const mapRow = (row: RefreshTokenRow): RefreshToken => ({
   id: row.id,
-  jti: row.jti,
-  tokenHash: row.token_hash,
+  refreshTokenHash: row.token_hash,
   userId: row.user_id,
   tokenFamilyId: row.token_family_id,
   replacedById: row.replaced_by_id,
@@ -30,8 +27,7 @@ const mapRow = (row: RefreshTokenRow): RefreshToken => ({
 });
 
 interface SaveRefreshTokenInput {
-  jti: string;
-  tokenHash: string;
+  refreshTokenHash: string;
   userId: string;
   tokenFamilyId: string;
   expiresAt: Date;
@@ -43,10 +39,9 @@ export const saveRefreshToken = async (
 ): Promise<RefreshToken> => {
   const db = client || pool
   const result = await db.query(
-    "INSERT INTO refresh_tokens(jti, token_hash, user_id, token_family_id, expires_at) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+    "INSERT INTO refresh_tokens(token_hash, user_id, token_family_id, expires_at) VALUES ($1, $2, $3, $4) RETURNING *",
     [
-      input.jti,
-      input.tokenHash,
+      input.refreshTokenHash,
       input.userId,
       input.tokenFamilyId,
       input.expiresAt,
@@ -59,14 +54,14 @@ export const saveRefreshToken = async (
   return mapRow(row);
 };
 
-export const findRefreshTokenByJti = async (
-  jti: string,
+export const findRefreshTokenByHash = async (
+  refreshTokenHash: string,
   client?: PoolClient
 ): Promise<RefreshToken | null> => {
   const db = client || pool
   const result = await db.query<RefreshTokenRow>(
-    `SELECT * FROM refresh_tokens WHERE jti = $1 FOR UPDATE`,
-    [jti],
+    `SELECT * FROM refresh_tokens WHERE token_hash = $1 FOR UPDATE`,
+    [refreshTokenHash],
   );
   const row = result.rows[0];
   return row ? mapRow(row) : null;

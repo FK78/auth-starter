@@ -2,8 +2,7 @@ export type RevokedReason = "reuse_detected" | "logout" | "admin_revoked";
 
 export interface RefreshToken {
     id: string;
-    jti: string;
-    tokenHash: string;
+    refreshTokenHash: string;
     userId: string;
     tokenFamilyId: string;
     replacedById?: string | null;

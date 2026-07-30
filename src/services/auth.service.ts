@@ -6,22 +6,16 @@ import {
   findUserByEmail,
   findUserById,
 } from "../queries/auth.queries.ts";
-import { compareHash, hashString } from "../utils/auth.ts";
+import { compareHash, hashString, hashToken } from "../utils/auth.ts";
 import { issueTokenPair, rotateTokenPair } from "./token.service.ts";
-import jwt from "jsonwebtoken";
 import {
-  findRefreshTokenByJti,
+  findRefreshTokenByHash,
   revokeTokenFamily,
 } from "../queries/token.queries.ts";
 import { withTransaction } from "../db/db.ts";
+import type { LoginInput, RegisterInput } from "../schemas/auth.schema.ts";
 
-type User = {
-  name: string;
-  email: string;
-  password: string;
-};
-
-export const registerUser = async ({ name, email, password }: User) => {
+export const registerUser = async ({ name, email, password }: RegisterInput) => {
   const normalizedEmail = email.trim().toLowerCase();
 
   if (await emailExists(normalizedEmail)) {
@@ -40,13 +34,7 @@ export const registerUser = async ({ name, email, password }: User) => {
   }
 };
 
-export const loginUser = async ({
-  email,
-  password,
-}: {
-  email: string;
-  password: string;
-}) => {
+export const loginUser = async ({email, password}: LoginInput) => {
   const normalizedEmail = email.trim().toLowerCase();
   const result = await findUserByEmail(normalizedEmail);
   const extractedSalt = result?.passwordHash.split("$")[4];
@@ -65,23 +53,16 @@ export const loginUser = async ({
 
 export const refreshTokens = async (incomingRefreshToken: string) => {
   return await withTransaction(async (client) => {
-    let payload: { sub: string; jti: string };
-    try {
-      payload = jwt.verify(
-        incomingRefreshToken,
-        process.env.REFRESH_TOKEN_SECRET!,
-        { algorithms: ["HS256"], issuer: "tudo", audience: "tudo-api" }
-      ) as typeof payload;
-    } catch {
-      throw new AppError("Invalid refresh token", 401);
-    }
-
-    const tokenRow = await findRefreshTokenByJti(payload.jti, client);
+    const refreshTokenHash = hashToken(incomingRefreshToken)
+    
+    const tokenRow = await findRefreshTokenByHash(refreshTokenHash, client);
     if (!tokenRow) {
       throw new AppError("Invalid refresh token", 401);
     }
 
     if (tokenRow.revokedAt || tokenRow.replacedById) {
+        // Intentionally not using the transaction client as this revocation must
+        // survive even though this branch always throws and rolls the tx back.
       await revokeTokenFamily(tokenRow.tokenFamilyId, "reuse_detected");
       throw new AppError("Refresh token reuse detected", 401);
     }

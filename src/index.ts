@@ -10,7 +10,7 @@ const app = express()
 app.set('trust proxy', 1);
 app.use(express.json())
 
-if (!process.env.ACCESS_TOKEN_SECRET || !process.env.REFRESH_TOKEN_SECRET) {
+if (!process.env.ACCESS_TOKEN_SECRET) {
   throw new Error("Token secrets must be set")
 }
 

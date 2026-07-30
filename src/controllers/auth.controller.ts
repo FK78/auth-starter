@@ -9,7 +9,6 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   const { accessToken, refreshToken } = await loginUser(req.body);
   return res.status(200).json({ accessToken, refreshToken });
-
 };
 
 export const refresh = async (req: Request, res: Response) => {

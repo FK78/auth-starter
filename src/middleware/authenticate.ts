@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "../errors/AppError.ts";
-import { findUserById } from "../queries/auth.queries.ts";
 
 export const authenticate = async (
   req: Request,
@@ -26,15 +25,10 @@ export const authenticate = async (
     throw new AppError("Invalid access token", 401);
   }
 
-  if (payload.type !== "access") {
-    throw new AppError("Invalid access token", 401)
+  if (payload.type !== "access" || !payload.sub) {
+      throw new AppError("Invalid access token", 401);
   }
-
-  const user = await findUserById(payload.sub);
-  if (!user) {
-    throw new AppError("User not found", 401);
-  }
-
-  req.user = { id: user.id };
+ 
+  req.user = { id: payload.sub };
   next();
 };
