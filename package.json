@@ -1,7 +1,7 @@
 {
-  "name": "tudo",
+  "name": "express-starter",
   "version": "1.0.0",
-  "description": "Authenticated todo API with JWT, pagination, and ownership. Express + TypeScript + PostgreSQL ",
+  "description": "Minimal JWT auth starter: access/refresh token rotation, reuse detection, and Argon2id hashing. Express 5 + TypeScript + PostgreSQL.",
   "main": "index.js",
   "scripts": {
     "dev": "node --env-file .env --watch src/index.ts",
@@ -10,16 +10,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FK78/tudo.git"
+    "url": "git+https://github.com/FK78/express-starter.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/FK78/tudo/issues"
+    "url": "https://github.com/FK78/express-starter/issues"
   },
-  "homepage": "https://github.com/FK78/tudo#readme",
+  "homepage": "https://github.com/FK78/express-starter#readme",
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",

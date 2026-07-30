@@ -133,14 +133,10 @@ auth-starter/
 Click **Use this template** above, or:
 
 ```bash
-npx tiged FK78/auth-starter my-new-project
+npx tiged FK78/express-starter my-new-project
 ```
 
 Then rename the package, drop your own domain routes behind `authenticate`, and build the thing you actually meant to build.
-
-## Credit
-
-Extracted from [tudo](https://github.com/FK78/tudo), a todo API built as a solution to the [Todo List API](https://roadmap.sh/projects/todo-list-api) project on roadmap.sh.
 
 ## License
 
