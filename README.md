@@ -192,7 +192,7 @@ auth-starter/
 
 ## Requirements
 
-- Node.js 26+ (uses native `node:crypto` Argon2 and the `--env-file` flag)
+- Node.js 24+ (uses native `node:crypto` Argon2 and the `--env-file` flag)
 - Docker (for PostgreSQL)
 - One JWT secret, `ACCESS_TOKEN_SECRET` - refresh tokens are opaque random
   bytes, hashed before being stored in Postgres.
