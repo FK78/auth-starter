@@ -13,14 +13,9 @@ import {
   revokeTokenFamily,
 } from "../queries/token.queries.ts";
 import { withTransaction } from "../db/db.ts";
+import type { LoginInput, RegisterInput } from "../schemas/auth.schema.ts";
 
-type User = {
-  name: string;
-  email: string;
-  password: string;
-};
-
-export const registerUser = async ({ name, email, password }: User) => {
+export const registerUser = async ({ name, email, password }: RegisterInput) => {
   const normalizedEmail = email.trim().toLowerCase();
 
   if (await emailExists(normalizedEmail)) {
@@ -39,13 +34,7 @@ export const registerUser = async ({ name, email, password }: User) => {
   }
 };
 
-export const loginUser = async ({
-  email,
-  password,
-}: {
-  email: string;
-  password: string;
-}) => {
+export const loginUser = async ({email, password}: LoginInput) => {
   const normalizedEmail = email.trim().toLowerCase();
   const result = await findUserByEmail(normalizedEmail);
   const extractedSalt = result?.passwordHash.split("$")[4];
