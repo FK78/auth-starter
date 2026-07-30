@@ -15,7 +15,7 @@ const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const signAccessToken = (user: AuthUser): string =>
   jwt.sign({ sub: user.id, type: "access" }, env.ACCESS_TOKEN_SECRET!, {
-    expiresIn: "15m", issuer: "express-starter", audience: "express-starter-api"
+    expiresIn: "15m", issuer: "auth-starter", audience: "auth-starter-api"
   });
 
 const createAndPersistTokenPair = async (

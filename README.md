@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./logo.svg" width="80" alt="auth-starter logo" />
+  <img src="./logo.svg" width="140" alt="auth-starter logo" />
 </p>
 
 <h1 align="center">auth-starter</h1>
@@ -22,6 +22,7 @@ Because every new backend project needs the same JWT groundwork, and the interes
 - **Argon2id** (via `node:crypto`) - no extra hashing dependency
 - **Zod** - request validation and startup environment validation
 - **cors** - configurable via `ALLOWED_ORIGINS`, closed by default
+- **pino** + **pino-http** - structured JSON logging with per-request IDs
 - **In-memory rate limiting** - sliding window, per-route
 
 ## Endpoints
@@ -32,6 +33,53 @@ Because every new backend project needs the same JWT groundwork, and the interes
 | `POST` | `/login`    | Issue a token pair    |
 | `POST` | `/refresh`  | Rotate tokens         |
 | `GET`  | `/health`   | DB connectivity check |
+
+<details>
+<summary>Request/response examples</summary>
+
+**`POST /register`**
+
+```json
+// Request
+{ "name": "Ada Lovelace", "email": "ada@example.com", "password": "correct-horse-battery" }
+
+// 201 Created
+{ "accessToken": "eyJ...", "refreshToken": "b3xK..." }
+```
+
+**`POST /login`**
+
+```json
+// Request
+{ "email": "ada@example.com", "password": "correct-horse-battery" }
+
+// 200 OK
+{ "accessToken": "eyJ...", "refreshToken": "b3xK..." }
+```
+
+**`POST /refresh`**
+
+```json
+// Request
+{ "refreshToken": "b3xK..." }
+
+// 200 OK
+{ "accessToken": "eyJ...", "refreshToken": "n9Zp..." }
+```
+
+**`GET /health`**
+
+```json
+// 200 OK
+{ "status": "ok" }
+
+// 503 Service Unavailable
+{ "error": "Service unavailable" }
+```
+
+Every error response (4xx/5xx) is shaped `{ "error": "<message>" }`.
+
+</details>
 
 Everything past this point is yours: mount your own routers behind the `authenticate` middleware and you're covered.
 
@@ -56,6 +104,12 @@ No token → `401 Unauthorized`. Invalid or reused refresh token → the whole f
 | `POST /refresh`     | 1 min  | 10             | IP          |
 
 Rate limit state is in-memory, which is fine for a single instance. If you ever run this behind more than one instance, swap in a shared store (Redis) before relying on it - in-memory limiters don't share state across processes.
+
+## Logging
+
+Structured JSON logs via `pino`, with `pino-http` attaching a per-request logger (`req.log`) and request ID to every request. `Authorization` and `Cookie` headers are redacted by default (`src/utils/logger.ts`).
+
+Use `req.log` inside request handlers so log lines can be correlated back to the request that produced them; use the base `logger` export for anything outside a request (startup, background tasks).
 
 ## Getting Started
 
@@ -106,6 +160,7 @@ auth-starter/
 │   │   └── health.controller.ts
 │   ├── services/
 │   │   ├── auth.service.ts
+│   │   ├── health.service.ts
 │   │   └── token.service.ts
 │   ├── queries/
 │   │   ├── auth.queries.ts
@@ -125,7 +180,8 @@ auth-starter/
 │   │   ├── express.d.ts
 │   │   └── tokens.ts
 │   ├── utils/
-│   │   └── auth.ts
+│   │   ├── auth.ts
+│   │   └── logger.ts
 │   └── db/
 │       └── db.ts
 ├── db/
@@ -146,7 +202,7 @@ auth-starter/
 Click **Use this template** above, or:
 
 ```bash
-npx tiged FK78/express-starter my-new-project
+npx tiged FK78/auth-starter my-new-project
 ```
 
 Then rename the package, drop your own domain routes behind `authenticate`, and build the thing you actually meant to build.
