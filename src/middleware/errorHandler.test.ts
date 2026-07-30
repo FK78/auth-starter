@@ -27,6 +27,21 @@ describe("errorHandler", () => {
     expect(req.log.error).not.toHaveBeenCalled();
   });
 
+  it("respects a self-describing HTTP error's own status, without logging", () => {
+    const req = fakeReq();
+    const res = fakeRes();
+    const err = Object.assign(new SyntaxError("Unexpected token in JSON"), {
+      statusCode: 400,
+      expose: true,
+    });
+
+    errorHandler(err, req, res, vi.fn());
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: "Invalid request" });
+    expect(req.log.error).not.toHaveBeenCalled();
+  });
+
   it("logs and responds with a generic 500 for a non-AppError", () => {
     const req = fakeReq();
     const res = fakeRes();
