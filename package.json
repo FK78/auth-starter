@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --env-file .env --watch src/index.ts",
     "start": "node --env-file .env dist/index.js",
-    "build": "tsc"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
