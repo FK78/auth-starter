@@ -2,6 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    clearMocks: true,
     env: {
       POSTGRES_USER: "test",
       POSTGRES_PASSWORD: "test",
