@@ -51,19 +51,32 @@ describe("auth flow (real database)", () => {
     const secondRefreshToken = rotateRes.body.refreshToken as string;
     expect(secondRefreshToken).not.toBe(firstRefreshToken);
 
-    // Reusing the already-rotated-away token should be rejected...
     const reuseRes = await request(app)
       .post("/refresh")
       .send({ refreshToken: firstRefreshToken });
     expect(reuseRes.status).toBe(401);
     expect(reuseRes.body.error).toBe("Refresh token reuse detected");
 
-    // ...and should have revoked the WHOLE family, including the token that
-    // was legitimately issued by the rotation above.
     const secondTokenNowRevokedRes = await request(app)
       .post("/refresh")
       .send({ refreshToken: secondRefreshToken });
     expect(secondTokenNowRevokedRes.status).toBe(401);
+  });
+
+  it("only allows one winner when the same refresh token is used concurrently", async () => {
+    const registerRes = await request(app).post("/register").send(credentials);
+    const refreshToken = registerRes.body.refreshToken as string;
+
+    const [resA, resB] = await Promise.all([
+      request(app).post("/refresh").send({ refreshToken }),
+      request(app).post("/refresh").send({ refreshToken }),
+    ]);
+
+    const statuses = [resA.status, resB.status].sort();
+    expect(statuses).toEqual([200, 401]);
+
+    const loser = resA.status === 401 ? resA : resB;
+    expect(loser.body.error).toBe("Refresh token reuse detected");
   });
 
   it("rejects an unknown refresh token", async () => {
