@@ -3,7 +3,7 @@ import { AppError } from "../errors/AppError.ts";
 
 export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
     if (err instanceof AppError === false) {
-        req.log.error(`Internal Server Error ${err.stack}`)
+        req.log.error(err, "Internal Server Error")
         return res
             .status(500)
             .json({ error: `Internal Server Error` });

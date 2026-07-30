@@ -21,7 +21,7 @@ export const withTransaction = async <T>(fn: (client: PoolClient) => Promise<T>)
     try {
       await client.query("ROLLBACK")
     } catch (rollbackErr) {
-      logger.error(`Rollback failed: ${rollbackErr}`)
+      logger.error(rollbackErr, "Rollback failed")
     }
     throw err
   } finally {

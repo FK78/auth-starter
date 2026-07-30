@@ -6,7 +6,7 @@ export const checkDatabaseHealth = async (): Promise<void> => {
   try {
     await pool.query(`SELECT * FROM MEEEE`);
   } catch (err) {
-    logger.error("Health check database query failed:");
+    logger.error(err, "Health check database query failed");
     throw new AppError("Service unavailable", 503);
   }
 };
