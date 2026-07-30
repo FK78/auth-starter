@@ -9,11 +9,12 @@ import type { PoolClient } from "pg";
 import type { RefreshToken } from "../types/tokens.ts";
 import type { AuthUser } from "../types/auth.ts";
 import { generateOpaqueToken, hashToken } from "../utils/auth.ts";
+import { env } from "../config/env.ts";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const signAccessToken = (user: AuthUser): string =>
-  jwt.sign({ sub: user.id, type: "access" }, process.env.ACCESS_TOKEN_SECRET!, {
+  jwt.sign({ sub: user.id, type: "access" }, env.ACCESS_TOKEN_SECRET!, {
     expiresIn: "15m", issuer: "express-starter", audience: "express-starter-api"
   });
 

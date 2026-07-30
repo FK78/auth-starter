@@ -4,10 +4,11 @@ import healthRouter from "./routes/health.router.ts";
 import cors from "cors";
 import { pool } from "./db/db.ts";
 import { errorHandler, routeNotFound } from "./middleware/errorHandler.ts";
+import { env } from "./config/env.ts";
 
-const port = process.env.PORT || 3000;
+const port = env.PORT;
 const app = express();
-const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "")
+const allowedOrigins = (env.ALLOWED_ORIGINS ?? "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
@@ -20,10 +21,6 @@ app.use(
 
 app.set("trust proxy", 1);
 app.use(express.json());
-
-if (!process.env.ACCESS_TOKEN_SECRET) {
-  throw new Error("Token secrets must be set");
-}
 
 try {
   await pool.query("SELECT 1");

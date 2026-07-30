@@ -1,11 +1,12 @@
 import { Pool, type PoolClient } from 'pg'
+import { env } from '../config/env.ts'
  
 export const pool = new Pool({
-  host: process.env.HOST,
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  port: Number(process.env.POSTGRES_PORT),
-  database: process.env.POSTGRES_DB,
+  host: env.HOST,
+  user: env.POSTGRES_USER,
+  password: env.POSTGRES_PASSWORD,
+  port: env.POSTGRES_PORT,
+  database: env.POSTGRES_DB,
 })
 
 export const withTransaction = async <T>(fn: (client: PoolClient) => Promise<T>): Promise<T> => {
