@@ -1,0 +1,22 @@
+name: auth-starter-test
+
+services:
+  db:
+    container_name: auth-starter-test-db
+    image: postgres
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: auth_starter_test
+    ports:
+      - 55433:5432
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
