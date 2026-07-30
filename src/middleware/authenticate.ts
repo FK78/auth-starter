@@ -20,7 +20,7 @@ export const authenticate = async (
     payload = jwt.verify(
       accessToken,
       env.ACCESS_TOKEN_SECRET!,
-      { algorithms: ["HS256"], issuer: "express-starter", audience: "express-starter-api" }
+      { algorithms: ["HS256"], issuer: "auth-starter", audience: "auth-starter-api" }
     ) as unknown as typeof payload;
   } catch {
     throw new AppError("Invalid access token", 401);

@@ -1,5 +1,5 @@
 {
-  "name": "express-starter",
+  "name": "auth-starter",
   "version": "1.0.0",
   "description": "Minimal JWT auth starter: access/refresh token rotation, reuse detection, and Argon2id hashing. Express 5 + TypeScript + PostgreSQL.",
   "main": "dist/index.js",
@@ -10,16 +10,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FK78/express-starter.git"
+    "url": "git+https://github.com/FK78/auth-starter.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/FK78/express-starter/issues"
+    "url": "https://github.com/FK78/auth-starter/issues"
   },
-  "homepage": "https://github.com/FK78/express-starter#readme",
+  "homepage": "https://github.com/FK78/auth-starter#readme",
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

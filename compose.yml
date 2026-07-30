@@ -1,6 +1,6 @@
 services:
   db:
-    container_name: express-starter-db
+    container_name: auth-starter-db
     image: postgres
     restart: always
     shm_size: 128mb
