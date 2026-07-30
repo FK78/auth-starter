@@ -147,12 +147,32 @@ Start the server:
 npm run dev
 ```
 
+## Testing
+
+Two tiers, run separately:
+
+**Unit tests** (`npm test`) - fast, no Docker required. Mocks the DB layer (`vi.mock`) where needed; real Argon2 hashing and real JWT signing/verification run as-is, since faking those would be more work than just running them. Covers every middleware, service, and controller in isolation.
+
+**Integration tests** (`npm run test:integration`) - zero mocks, hits a real throwaway Postgres instance. Covers what mocks structurally can't: real transactions, real rollback behaviour, and the actual refresh-token reuse-detection flow (register → rotate → reuse a spent token → confirm the whole family gets revoked).
+
+```bash
+npm run test:integration:db:up    # starts a disposable Postgres on port 55433
+npm run test:integration          # runs *.integration.test.ts against it
+npm run test:integration:db:down  # tears it down
+```
+
+The test database (`compose.test.yml`) is a separate Compose project from the dev one (`compose.yml`) - different name, different port, `tmpfs` storage so it never persists and never collides with your dev data.
+
 ## Project Structure
+
+Test files (`*.test.ts` for unit tests, `*.integration.test.ts` for the real-DB
+suite) are colocated next to the file they cover, not shown individually below.
 
 ```
 auth-starter/
 ├── src/
 │   ├── index.ts
+│   ├── app.ts
 │   ├── config/
 │   │   └── env.ts
 │   ├── controllers/
@@ -183,10 +203,14 @@ auth-starter/
 │   │   ├── auth.ts
 │   │   └── logger.ts
 │   └── db/
-│       └── db.ts
+│       ├── db.ts
+│       └── testDb.ts
 ├── db/
 │   └── schema.sql
 ├── compose.yml
+├── compose.test.yml
+├── vitest.config.ts
+├── vitest.integration.config.ts
 └── tsconfig.json
 ```
 
