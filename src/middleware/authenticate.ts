@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "../errors/AppError.ts";
+import { env } from "../config/env.ts";
 
 export const authenticate = async (
   req: Request,
@@ -18,7 +19,7 @@ export const authenticate = async (
   try {
     payload = jwt.verify(
       accessToken,
-      process.env.ACCESS_TOKEN_SECRET!,
+      env.ACCESS_TOKEN_SECRET!,
       { algorithms: ["HS256"], issuer: "express-starter", audience: "express-starter-api" }
     ) as unknown as typeof payload;
   } catch {

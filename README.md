@@ -20,15 +20,18 @@ Because every new backend project needs the same JWT groundwork, and the interes
 - **PostgreSQL** - via `pg`, raw SQL, no ORM
 - **jsonwebtoken** - access + refresh token rotation with family-based reuse detection
 - **Argon2id** (via `node:crypto`) - no extra hashing dependency
+- **Zod** - request validation and startup environment validation
+- **cors** - configurable via `ALLOWED_ORIGINS`, closed by default
 - **In-memory rate limiting** - sliding window, per-route
 
 ## Endpoints
 
-| Method | Route       | What it does        |
-| ------ | ----------- | -------------------- |
-| `POST` | `/register` | Create a user        |
-| `POST` | `/login`    | Issue a token pair   |
-| `POST` | `/refresh`  | Rotate tokens        |
+| Method | Route       | What it does          |
+| ------ | ----------- | --------------------- |
+| `POST` | `/register` | Create a user         |
+| `POST` | `/login`    | Issue a token pair    |
+| `POST` | `/refresh`  | Rotate tokens         |
+| `GET`  | `/health`   | DB connectivity check |
 
 Everything past this point is yours: mount your own routers behind the `authenticate` middleware and you're covered.
 
@@ -67,9 +70,14 @@ Set up your environment:
 ```bash
 cp .env.example .env
 # Fill in your values:
-#   PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB,
-#   POSTGRES_PORT, HOST, ACCESS_TOKEN_SECRET
+#   PORT, HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB,
+#   POSTGRES_PORT, ACCESS_TOKEN_SECRET
+# Optional:
+#   ALLOWED_ORIGINS - comma-separated list of origins allowed by CORS.
+#   Leave unset to reject all cross-origin browser requests by default.
 ```
+
+Environment variables are validated at startup with Zod (`src/config/env.ts`) - a missing or malformed value fails fast with a clear message instead of a cryptic error later.
 
 Start the database:
 
@@ -91,8 +99,11 @@ npm run dev
 auth-starter/
 ├── src/
 │   ├── index.ts
+│   ├── config/
+│   │   └── env.ts
 │   ├── controllers/
-│   │   └── auth.controller.ts
+│   │   ├── auth.controller.ts
+│   │   └── health.controller.ts
 │   ├── services/
 │   │   ├── auth.service.ts
 │   │   └── token.service.ts
@@ -100,7 +111,8 @@ auth-starter/
 │   │   ├── auth.queries.ts
 │   │   └── token.queries.ts
 │   ├── routes/
-│   │   └── auth.router.ts
+│   │   ├── auth.router.ts
+│   │   └── health.router.ts
 │   ├── middleware/
 │   │   ├── authenticate.ts
 │   │   ├── errorHandler.ts
@@ -126,7 +138,8 @@ auth-starter/
 
 - Node.js 26+ (uses native `node:crypto` Argon2 and the `--env-file` flag)
 - Docker (for PostgreSQL)
-- Two JWT secrets: one for access tokens, one for refresh tokens
+- One JWT secret, `ACCESS_TOKEN_SECRET` - refresh tokens are opaque random
+  bytes, hashed before being stored in Postgres.
 
 ## Using This as a Template
 
