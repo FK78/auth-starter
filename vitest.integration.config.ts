@@ -3,12 +3,13 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     clearMocks: true,
-    exclude: ["**/node_modules/**", "**/*.integration.test.ts"],
+    include: ["**/*.integration.test.ts"],
     env: {
+      HOST: "localhost",
       POSTGRES_USER: "test",
       POSTGRES_PASSWORD: "test",
-      POSTGRES_DB: "test",
-      POSTGRES_PORT: "5432",
+      POSTGRES_DB: "auth_starter_test",
+      POSTGRES_PORT: "55433",
       ACCESS_TOKEN_SECRET: "test-secret",
     },
   },
