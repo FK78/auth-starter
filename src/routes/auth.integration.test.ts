@@ -40,27 +40,27 @@ describe("auth flow (real database)", () => {
     expect(wrongPasswordRes.status).toBe(401);
   });
 
-  it("rotates the refresh token and detects reuse of a spent one", async () => {
+  it("detects reuse within a single token family and revokes the whole lineage", async () => {
     const registerRes = await request(app).post("/register").send(credentials);
-    const firstRefreshToken = registerRes.body.refreshToken as string;
+    const originalToken = registerRes.body.refreshToken as string;
 
     const rotateRes = await request(app)
       .post("/refresh")
-      .send({ refreshToken: firstRefreshToken });
+      .send({ refreshToken: originalToken });
     expect(rotateRes.status).toBe(200);
-    const secondRefreshToken = rotateRes.body.refreshToken as string;
-    expect(secondRefreshToken).not.toBe(firstRefreshToken);
+    const rotatedToken = rotateRes.body.refreshToken as string;
+    expect(rotatedToken).not.toBe(originalToken);
 
     const reuseRes = await request(app)
       .post("/refresh")
-      .send({ refreshToken: firstRefreshToken });
+      .send({ refreshToken: originalToken });
     expect(reuseRes.status).toBe(401);
     expect(reuseRes.body.error).toBe("Refresh token reuse detected");
 
-    const secondTokenNowRevokedRes = await request(app)
+    const rotatedTokenNowRevokedRes = await request(app)
       .post("/refresh")
-      .send({ refreshToken: secondRefreshToken });
-    expect(secondTokenNowRevokedRes.status).toBe(401);
+      .send({ refreshToken: rotatedToken });
+    expect(rotatedTokenNowRevokedRes.status).toBe(401);
   });
 
   it("only allows one winner when the same refresh token is used concurrently", async () => {
