@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { z } from "zod";
+import express from "express";
+import request from "supertest";
 import type { Request, Response } from "express";
 import { validate } from "./validate.ts";
 import { AppError } from "../errors/AppError.ts";
@@ -44,7 +46,7 @@ describe("validate", () => {
     }
   });
 
-  it("merges valid query values into req.query", () => {
+  it("replaces req.query with parsed data on a plain object (no Express getter involved)", () => {
     const schema = z.object({ page: z.coerce.number() });
     const req = fakeReq({ query: { page: "2" } });
 
@@ -78,5 +80,19 @@ describe("validate", () => {
       expect((err as AppError).message).toContain("params.id");
       expect((err as AppError).message).toContain("; ");
     }
+  });
+});
+
+describe("validate (real Express request, not a fake object)", () => {
+  it("survives req.query's Express 5 getter so a later handler sees coerced values", async () => {
+    const schema = z.object({ page: z.coerce.number() });
+    const app = express();
+    app.get("/check", validate({ query: schema }), (req, res) => {
+      res.json({ page: req.query.page, type: typeof req.query.page });
+    });
+
+    const res = await request(app).get("/check?page=2");
+
+    expect(res.body).toEqual({ page: 2, type: "number" });
   });
 });
