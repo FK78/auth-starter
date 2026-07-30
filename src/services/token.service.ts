@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import {
   linkReplacedToken,
   markTokenReplaced,
@@ -16,7 +16,6 @@ const signAccessToken = (user: AuthUser): string =>
   jwt.sign({ sub: user.id, type: "access" }, process.env.ACCESS_TOKEN_SECRET!, {
     expiresIn: "15m", issuer: "tudo", audience: "tudo-api"
   });
-
 
 const createAndPersistTokenPair = async (
   user: AuthUser,

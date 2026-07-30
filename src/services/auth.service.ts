@@ -8,7 +8,6 @@ import {
 } from "../queries/auth.queries.ts";
 import { compareHash, hashString, hashToken } from "../utils/auth.ts";
 import { issueTokenPair, rotateTokenPair } from "./token.service.ts";
-import jwt from "jsonwebtoken";
 import {
   findRefreshTokenByHash,
   revokeTokenFamily,
