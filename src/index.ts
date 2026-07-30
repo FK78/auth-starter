@@ -4,7 +4,7 @@ import healthRouter from "./routes/health.router.ts"
 import { pool } from "./db/db.ts"
 import { errorHandler, routeNotFound } from "./middleware/errorHandler.ts"
 
-const port = process.env.TUDO_PORT || 3000
+const port = process.env.PORT || 3000
 const app = express()
 
 
