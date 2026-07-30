@@ -1,5 +1,6 @@
 import express from "express"
 import authRouter from "./routes/auth.router.ts"
+import healthRouter from "./routes/health.router.ts"
 import { pool } from "./db/db.ts"
 import { errorHandler, routeNotFound } from "./middleware/errorHandler.ts"
 
@@ -23,6 +24,7 @@ try {
 }
 
 app.use("/", authRouter)
+app.use("/", healthRouter)
 
 app.use(routeNotFound)
 app.use(errorHandler)
