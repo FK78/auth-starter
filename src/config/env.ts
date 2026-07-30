@@ -1,4 +1,5 @@
 import z from "zod";
+import { logger } from "../utils/logger.ts";
 
 const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
@@ -15,7 +16,7 @@ const result = envSchema.safeParse(process.env);
 
 if (!result.success){
     const issues = result.error.issues.map((i) => ` ${i.path.join(".")}: ${i.message}`)
-    console.error("Invalid environment configuration:\n" + issues.join("\n"))
+    logger.error("Invalid environment configuration:\n" + issues.join("\n"))
     process.exit(1)
 }
 

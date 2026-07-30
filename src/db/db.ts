@@ -1,5 +1,6 @@
 import { Pool, type PoolClient } from 'pg'
 import { env } from '../config/env.ts'
+import { logger } from '../utils/logger.ts'
  
 export const pool = new Pool({
   host: env.HOST,
@@ -20,7 +21,7 @@ export const withTransaction = async <T>(fn: (client: PoolClient) => Promise<T>)
     try {
       await client.query("ROLLBACK")
     } catch (rollbackErr) {
-      console.error(`Rollback failed: ${rollbackErr}`)
+      logger.error(`Rollback failed: ${rollbackErr}`)
     }
     throw err
   } finally {
