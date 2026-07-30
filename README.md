@@ -68,7 +68,7 @@ Set up your environment:
 cp .env.example .env
 # Fill in your values:
 #   PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB,
-#   POSTGRES_PORT, HOST, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET
+#   POSTGRES_PORT, HOST, ACCESS_TOKEN_SECRET
 ```
 
 Start the database:
