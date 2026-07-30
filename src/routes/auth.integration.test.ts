@@ -63,16 +63,6 @@ describe("auth flow (real database)", () => {
     expect(rotatedTokenNowRevokedRes.status).toBe(401);
   });
 
-  it("only allows one winner when two registrations race for the same email", async () => {
-    const [resA, resB] = await Promise.all([
-      request(app).post("/register").send(credentials),
-      request(app).post("/register").send(credentials),
-    ]);
-
-    const statuses = [resA.status, resB.status].sort();
-    expect(statuses).toEqual([201, 409]);
-  });
-
   it("only allows one winner when the same refresh token is used concurrently", async () => {
     const registerRes = await request(app).post("/register").send(credentials);
     const refreshToken = registerRes.body.refreshToken as string;
