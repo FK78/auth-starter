@@ -121,4 +121,22 @@ describe("refreshSchema", () => {
 
     expect(result.success).toBe(false);
   });
+
+  it("rejects a refresh token that is a number, not a string", () => {
+    const result = refreshSchema.safeParse({ refreshToken: 12345 });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a refresh token that is an array", () => {
+    const result = refreshSchema.safeParse({ refreshToken: ["abc123"] });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a refresh token that is null", () => {
+    const result = refreshSchema.safeParse({ refreshToken: null });
+
+    expect(result.success).toBe(false);
+  });
 });
