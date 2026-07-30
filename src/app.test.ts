@@ -55,3 +55,22 @@ describe("CORS", () => {
     expect(res.headers["access-control-allow-origin"]).toBeUndefined();
   });
 });
+
+describe("health check without a reachable database", () => {
+  const originalPort = process.env.POSTGRES_PORT;
+
+  afterEach(() => {
+    process.env.POSTGRES_PORT = originalPort;
+  });
+
+  it("returns 503 when the database can't be reached at all", async () => {
+    process.env.POSTGRES_PORT = "1"; // reserved port, nothing listens here
+    vi.resetModules();
+    const { app: scopedApp } = await import("./app.ts");
+
+    const res = await request(scopedApp).get("/health");
+
+    expect(res.status).toBe(503);
+    expect(res.body.error).toBeTypeOf("string");
+  });
+});
