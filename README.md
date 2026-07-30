@@ -151,7 +151,14 @@ npm run dev
 
 Two tiers, run separately:
 
-**Unit tests** (`npm test`) - fast, no Docker required. Mocks the DB layer (`vi.mock`) where needed; real Argon2 hashing and real JWT signing/verification run as-is, since faking those would be more work than just running them. Covers every middleware, service, and controller in isolation.
+**Unit tests** (`npm test`) - fast, no Docker required. Covers every middleware, service, and controller in isolation.
+
+**Mocking rationale**: mocking earns its cost when the real thing is slow, non-deterministic, has external side effects, or when you want to isolate your code from a collaborator you don't control. On that basis:
+
+- **Postgres is mocked** (`vi.mock` on the query modules). It's external, stateful across tests, and requires a running server - exactly the case for mocking. Real-DB behaviour (transactions, rollback, reuse detection) is covered separately in the integration suite below, where it can't lie.
+- **Argon2 and `jsonwebtoken` are not mocked.** Both are pure, fast, deterministic CPU work with no side effects - none of the usual justifications for mocking apply. More importantly, faking either would cost *more* work than calling the real thing:
+  - `hashString` produces `` `$argon2id$v=19$m=...,t=...,p=...$<salt>$<hash>` `` ([utils/auth.ts](src/utils/auth.ts)), and `loginUser` parses that exact format back out to recover the salt for comparison ([auth.service.ts](src/services/auth.service.ts)). A mock returning `"fake-hash"` breaks that parsing; a mock that doesn't has to replicate Argon2's real output shape anyway.
+  - The entire point of `authenticate.test.ts` is proving the verification logic itself - wrong secret, wrong issuer, expired token, wrong algorithm all correctly rejected. Mocking `jwt.verify` would mean hand-rolling those same checks inside the mock just to make the test mean anything, i.e. reimplementing `jsonwebtoken`'s correctness checks, badly, to avoid calling the library that already gets them right.
 
 **Integration tests** (`npm run test:integration`) - zero mocks, hits a real throwaway Postgres instance. Covers what mocks structurally can't: real transactions, real rollback behaviour, and the actual refresh-token reuse-detection flow (register → rotate → reuse a spent token → confirm the whole family gets revoked).
 
