@@ -7,7 +7,11 @@
     "dev": "node --env-file .env --watch src/index.ts",
     "start": "node --env-file .env dist/index.js",
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:integration:db:up": "docker compose -f compose.test.yml up -d --wait",
+    "test:integration:db:down": "docker compose -f compose.test.yml down",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "repository": {
     "type": "git",
@@ -27,7 +31,10 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.1.1",
     "@types/pg": "^8.20.0",
-    "typescript": "^7.0.2"
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.2.2",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "cors": "^2.8.6",

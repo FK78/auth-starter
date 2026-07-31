@@ -37,7 +37,11 @@ export const validate = (schemas: ValidationSchemas): RequestHandler =>
       if (!result.success) {
         issues.push(...collectIssues("query", result.error));
       } else {
-        Object.assign(req.query, result.data);
+        Object.defineProperty(req, "query", {
+          value: result.data,
+          writable: true,
+          configurable: true,
+        });
       }
     }
 
