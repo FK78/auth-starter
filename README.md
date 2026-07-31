@@ -170,6 +170,8 @@ npm run test:integration:db:down  # tears it down
 
 The test database (`compose.test.yml`) is a separate Compose project from the dev one (`compose.yml`) - different name, different port, `tmpfs` storage so it never persists and never collides with your dev data.
 
+CI (`.github/workflows/ci.yml`) runs all of this automatically on every push and PR: a typecheck job, a unit-test job, and an integration-test job that spins up its own Postgres via `compose.test.yml` and tears it down afterward.
+
 ## Project Structure
 
 Test files (`*.test.ts` for unit tests, `*.integration.test.ts` for the real-DB
